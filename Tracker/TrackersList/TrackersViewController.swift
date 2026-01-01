@@ -62,6 +62,11 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupCollectionView()
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(TrackersCollectionViewCell.self, forCellWithReuseIdentifier: "trackerCell")
+        
         setUpNavigationBar()
         setUpView()
         setUpConstraints()
@@ -131,29 +136,79 @@ final class TrackersViewController: UIViewController {
     @objc private func plusButtonTapped() {
         let newHabitVC = NewHabitViewController()
         let navController = UINavigationController(rootViewController: newHabitVC)
+        newHabitVC.onCreateTracker = { [weak self] tracker in
+            self?.addNewTracker(tracker)
+        }
         present(navController, animated: true)
+    }
+    
+    private func addNewTracker(_ tracker: Tracker) {
+        let category = TrackerCategory(
+            title: "Важное",
+            trackers: [tracker]
+        )
+        
+        categories.append(category)
+        collectionView.reloadData()
+        updateStubVisibility()
+    }
+    
+    private func updateStubVisibility() {
+        let hasTrackers = !categories.isEmpty
+        stubImage.isHidden = hasTrackers
+        stubTitleLabel.isHidden = hasTrackers
     }
 }
 
 // MARK: - Extensions
-/*
- extension TrackersViewController: UICollectionViewDelegate {
- 
- }
- 
- extension TrackersViewController: UICollectionViewDataSource {
- func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
- 
- }
- 
- func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
- <#code#>
- }
- 
- 
- }
- 
- extension TrackersViewController: UICollectionViewDelegateFlowLayout {
- 
- }
- */
+extension TrackersViewController: UICollectionViewDelegate {
+    
+}
+
+extension TrackersViewController: UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return categories.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        guard section < categories.count else { return 0 }
+        return categories[section].trackers.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "trackerCell",
+            for: indexPath
+        ) as? TrackersCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+        
+        let tracker = categories[indexPath.section].trackers[indexPath.row]
+        let completedDays = completedTrackers.filter { $0.trackerId == tracker.id }.count
+        cell.configure(with: tracker, completedDays: completedDays)
+        
+        return cell
+    }
+}
+
+extension TrackersViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let availableWidth = collectionView.frame.width - 16 * 2 - 9
+        let cellWidth = availableWidth / 2
+        
+        return CGSize(width: cellWidth, height: 150)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 9
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 16
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 0, left: 16, bottom: 16, right: 16)
+    }
+}
+
