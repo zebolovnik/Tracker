@@ -9,20 +9,10 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     //MARK: - UI elements
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Трекеры"
-        label.font = UIFont.systemFont(ofSize: 34, weight: .bold)
-        label.textAlignment = .left
-        label.textColor = UIColor(resource: .ypBlack)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let plusButton: UIButton = {
+    private lazy var plusButton: UIButton = {
         let button = UIButton.systemButton(
             with: UIImage(resource: .plusButton),
-            target: TrackersViewController.self,
+            target: self,
             action: #selector(plusButtonTapped)
         )
         button.tintColor = UIColor(resource: .ypBlack)
@@ -71,11 +61,6 @@ final class TrackersViewController: UIViewController {
     //MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        setupCollectionView()
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(TrackersCollectionViewCell.self, forCellWithReuseIdentifier: "trackerCell")
         
         setUpNavigationBar()
         setUpView()
@@ -151,20 +136,24 @@ final class TrackersViewController: UIViewController {
 }
 
 // MARK: - Extensions
-extension TrackersViewController: UICollectionViewDelegate {
-    
-}
-
-extension TrackersViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        return UICollectionViewCell()
-    }
-}
-
-extension TrackersViewController: UICollectionViewDelegateFlowLayout {
-    
-}
+/*
+ extension TrackersViewController: UICollectionViewDelegate {
+ 
+ }
+ 
+ extension TrackersViewController: UICollectionViewDataSource {
+ func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+ 
+ }
+ 
+ func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+ <#code#>
+ }
+ 
+ 
+ }
+ 
+ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
+ 
+ }
+ */

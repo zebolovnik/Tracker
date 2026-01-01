@@ -10,11 +10,26 @@ import UIKit
 final class NewHabitViewController: UIViewController {
     
     //MARK: - UI elements
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+    
+    private let contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let titleTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Введите название трекера",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor.ypGray]
+        )
         textField.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        textField.backgroundColor = UIColor(resource: .ypLightGray)
+        textField.backgroundColor = UIColor(resource: .ypBackground)
         textField.layer.cornerRadius = 16
         textField.layer.masksToBounds = true
         
@@ -27,6 +42,7 @@ final class NewHabitViewController: UIViewController {
     
     private let tableView: UITableView = {
         let tableView = UITableView()
+        tableView.backgroundColor = UIColor(resource: .ypWhite)
         tableView.layer.cornerRadius = 16
         tableView.layer.masksToBounds = true
         tableView.isScrollEnabled = false
@@ -76,6 +92,9 @@ final class NewHabitViewController: UIViewController {
     }
     
     //MARK: - Private properties
+    private var selectedScheduleDays: [Int] = []
+    
+    //MARK: - Private methods
     private func setUpView() {
         view.backgroundColor = .ypWhite
         navigationItem.title = "Новая привычка"
@@ -84,8 +103,11 @@ final class NewHabitViewController: UIViewController {
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
         ]
         
-        view.addSubview(titleTextField)
-        view.addSubview(tableView)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        
+        contentView.addSubview(titleTextField)
+        contentView.addSubview(tableView)
         view.addSubview(cancelButton)
         view.addSubview(createButton)
     }
@@ -98,25 +120,37 @@ final class NewHabitViewController: UIViewController {
     
     private func setUpConstraints() {
         NSLayoutConstraint.activate([
-            titleTextField.widthAnchor.constraint(equalToConstant: 343),
-            titleTextField.heightAnchor.constraint(equalToConstant: 75),
-            titleTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 138),
-            titleTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            tableView.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 24), //fix
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            
+            titleTextField.heightAnchor.constraint(equalToConstant: 75),
+            titleTextField.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
+            titleTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            
+            tableView.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 24),
+            tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            tableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             tableView.heightAnchor.constraint(equalToConstant: 150),
             
-            cancelButton.widthAnchor.constraint(equalToConstant: 166),
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
-            cancelButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            cancelButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 34),
+            cancelButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            cancelButton.trailingAnchor.constraint(equalTo: createButton.leadingAnchor, constant: -8),
+            cancelButton.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 32),
+            cancelButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            cancelButton.widthAnchor.constraint(equalTo: createButton.widthAnchor),
             
-            createButton.widthAnchor.constraint(equalToConstant: 166),
             createButton.heightAnchor.constraint(equalToConstant: 60),
-            createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            createButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 34)
+            createButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            createButton.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 32)
         ])
     }
     
@@ -139,22 +173,20 @@ extension NewHabitViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "optionCell", for: indexPath)
         
-        // Настройка внешнего вида ячейки
-        cell.backgroundColor = UIColor(resource: .ypLightGray)
+        cell.backgroundColor = UIColor(resource: .ypBackground)
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.textLabel?.textColor = .ypBlack
         cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.detailTextLabel?.textColor = .ypGray
         
-        // Настройка ячеек
         switch indexPath.row {
         case 0:
             cell.textLabel?.text = "Категория"
-            cell.detailTextLabel?.text = nil // Пока не выбрано
+            cell.detailTextLabel?.text = nil
             cell.accessoryType = .disclosureIndicator
         case 1:
             cell.textLabel?.text = "Расписание"
-            cell.detailTextLabel?.text = nil // Пока не выбрано
+            cell.detailTextLabel?.text = nil
             cell.accessoryType = .disclosureIndicator
         default:
             break
@@ -174,14 +206,32 @@ extension NewHabitViewController: UITableViewDelegate {
         
         switch indexPath.row {
         case 0:
-            // Категория - пока заглушка
             print("Категория tapped")
         case 1:
-            // Расписание - открываем экран расписания
             let scheduleVC = ScheduleViewController()
+            scheduleVC.selectedDays = Set(selectedScheduleDays)
+            scheduleVC.onScheduleSelected = { [weak self] selectedDays in
+                self?.selectedScheduleDays = selectedDays
+                self?.updateScheduleCell()
+            }
+            
             navigationController?.pushViewController(scheduleVC, animated: true)
         default:
             break
         }
     }
+    
+    private func updateScheduleCell() {
+        if let cell = tableView.cellForRow(at: IndexPath(row: 1, section: 0)) {
+            if selectedScheduleDays.isEmpty {
+                cell.detailTextLabel?.text = nil
+            } else {
+                let daySymbols = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+                let selectedDaySymbols = selectedScheduleDays.map { daySymbols[$0] }
+                cell.detailTextLabel?.text = selectedDaySymbols.joined(separator: ", ")
+            }
+        }
+    }
 }
+
+
