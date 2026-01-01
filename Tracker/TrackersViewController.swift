@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class TrackerViewController: UIViewController {
+final class TrackersViewController: UIViewController {
     //MARK: - UI elements
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -21,7 +21,7 @@ final class TrackerViewController: UIViewController {
     private let plusButton: UIButton = {
         let button = UIButton.systemButton(
             with: UIImage(resource: .plusButton),
-            target: TrackerViewController.self,
+            target: TrackersViewController.self,
             action: nil
         )
         button.tintColor = UIColor(resource: .ypBlack)
@@ -52,6 +52,10 @@ final class TrackerViewController: UIViewController {
         textField.backgroundColor = UIColor(resource: .ypLightGray)
         textField.layer.cornerRadius = 10
         textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Поиск",
+            attributes: [.foregroundColor: UIColor(resource: .ypGray)]
+        )
         
         let searchIcon = UIImage(resource: .mangnifyingglass)
         let imageView = UIImageView(image: searchIcon)
@@ -93,6 +97,10 @@ final class TrackerViewController: UIViewController {
         setUpView()
         setUpConstraints()
     }
+    
+    //MARK: - Properties
+    private var categories: [TrackerCategory] = []
+    private var completedTrackers: [TrackerRecord] = []
     
     //MARK: - Private methods
     private func setUpView() {
@@ -140,6 +148,3 @@ final class TrackerViewController: UIViewController {
         ])
     }
 }
-
-
-
