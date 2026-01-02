@@ -13,63 +13,27 @@ final class NewHabitViewController: UIViewController {
     private var selectedScheduleDays: [Int] = []
     private var scheduleText: String = ""
     var onCreateTracker: ((Tracker) -> Void)?
+
+    private var formTitle: String = ""
+    private var formCategory: String = "Важное"
+    private var formSchedule: [Schedule] = []
+    private var formEmoji: String = "😭"
+    private var formColor: UIColor = .ypRed
     
-    // MARK: - UI Elements
-    private let scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        return scrollView
-    }()
+    private var isFormReady: Bool {
+        !formTitle.isEmpty && !formSchedule.isEmpty
+    }
     
-    private let contentView: UIView = {
-        let view = UIView()
+    private lazy var formView: TrackerFormView = {
+        let view = TrackerFormView(
+            title: formTitle,
+            category: formCategory,
+            schedule: formSchedule
+        )
         view.translatesAutoresizingMaskIntoConstraints = false
+        view.delegate = self
         return view
     }()
-    
-    private let titleTextField: UITextField = {
-        let textField = UITextField()
-        textField.attributedPlaceholder = NSAttributedString(
-            string: "Введите название трекера",
-            attributes: [NSAttributedString.Key.foregroundColor: UIColor.ypGray]
-        )
-        textField.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        textField.backgroundColor = UIColor(resource: .ypBackground)
-        textField.layer.cornerRadius = 16
-        textField.layer.masksToBounds = true
-        
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
-        textField.leftView = paddingView
-        textField.leftViewMode = .always
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        return textField
-    }()
-    
-    private let errorLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .ypRed
-        label.text = "Ограничение 38 символов"
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
-    }()
-    
-    private let optionsTableView: UITableView = {
-        let tableView = UITableView()
-        tableView.backgroundColor = UIColor(resource: .ypBackground)
-        tableView.layer.cornerRadius = 16
-        tableView.layer.masksToBounds = true
-        tableView.isScrollEnabled = false
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = .ypGray.withAlphaComponent(0.3)
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        return tableView
-    }()
-    
-    private var tableViewTopConstraint: NSLayoutConstraint?
     
     private lazy var cancelButton: UIButton = {
         let button = UIButton()
@@ -103,8 +67,8 @@ final class NewHabitViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
-        setupTableView()
         setupActions()
+        updateCreateButtonState()
     }
     
     // MARK: - Private Methods
@@ -115,61 +79,23 @@ final class NewHabitViewController: UIViewController {
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
         ]
-        
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
-        contentView.addSubview(titleTextField)
-        contentView.addSubview(errorLabel)
-        contentView.addSubview(optionsTableView)
+
+        view.addSubview(formView)
         view.addSubview(cancelButton)
         view.addSubview(createButton)
-    }
-    
-    private func setupTableView() {
-        optionsTableView.delegate = self
-        optionsTableView.dataSource = self
-        optionsTableView.register(UITableViewCell.self, forCellReuseIdentifier: "optionCell")
-        optionsTableView.rowHeight = 75
     }
     
     private func setupActions() {
         cancelButton.addTarget(self, action: #selector(didTapCancelButton), for: .touchUpInside)
         createButton.addTarget(self, action: #selector(didTapCreateButton), for: .touchUpInside)
-        
-        titleTextField.delegate = self
-        titleTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
     }
     
     private func setupConstraints() {
-        tableViewTopConstraint = optionsTableView.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 24)
-        
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16),
-            
-            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            
-            titleTextField.heightAnchor.constraint(equalToConstant: 75),
-            titleTextField.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
-            titleTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            
-            errorLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 8),
-            errorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            errorLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            errorLabel.heightAnchor.constraint(equalToConstant: 22),
-            
-            tableViewTopConstraint!,
-            optionsTableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            optionsTableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            optionsTableView.heightAnchor.constraint(equalToConstant: 150),
-            optionsTableView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            formView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            formView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            formView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            formView.bottomAnchor.constraint(equalTo: createButton.topAnchor, constant: -16),
             
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
             cancelButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -183,150 +109,57 @@ final class NewHabitViewController: UIViewController {
         ])
     }
     
-    private func updateCreateButtonState() {
-        let hasTitle = !(titleTextField.text?.isEmpty ?? true)
-        let hasSchedule = !selectedScheduleDays.isEmpty
-        
-        createButton.isEnabled = hasTitle && hasSchedule
-        createButton.backgroundColor = createButton.isEnabled ? .ypBlack : .ypGray
-    }
-    
-    private func getScheduleText(from days: [Int]) -> String {
-        if days.count == 7 {
-            return "Каждый день"
-        } else {
-            let daySymbols = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
-            let selectedDaySymbols = days.sorted().map { daySymbols[$0] }
-            return selectedDaySymbols.joined(separator: ", ")
-        }
-    }
-    
     // MARK: - Actions
-    @objc private func textFieldDidChange() {
-        updateCreateButtonState()
-    }
-    
     @objc private func didTapCancelButton() {
         dismiss(animated: true)
     }
     
     @objc private func didTapCreateButton() {
-        guard let title = titleTextField.text, !title.isEmpty else { return }
-        let schedule = selectedScheduleDays.map { Schedule(weekday: $0) }
+        guard !formTitle.isEmpty else { return }
+        
         let tracker = Tracker(
             id: UUID(),
-            title: title,
-            color: .ypBlue,
-            emoji: "🏃‍♂️",
-            schedule: schedule
+            title: formTitle,
+            color: formColor,
+            emoji: formEmoji,
+            schedule: formSchedule
         )
         
         onCreateTracker?(tracker)
         dismiss(animated: true)
     }
+    
+    private func updateCreateButtonState() {
+        createButton.isEnabled = isFormReady
+        createButton.backgroundColor = isFormReady ? .ypBlack : .ypGray
+    }
 }
 
 // MARK: - Extensions
-extension NewHabitViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 2
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "optionCell")
-        
-        cell.backgroundColor = UIColor(resource: .ypBackground)
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        cell.textLabel?.textColor = .ypBlack
-        cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        cell.detailTextLabel?.textColor = .ypGray
-        cell.selectionStyle = .default
-        cell.accessoryType = .disclosureIndicator
-        
-        if indexPath.row == 1 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        }
-        
-        switch indexPath.row {
-        case 0:
-            cell.textLabel?.text = "Категория"
-            cell.detailTextLabel?.text = "Важное"
-        case 1:
-            cell.textLabel?.text = "Расписание"
-            if !selectedScheduleDays.isEmpty {
-                cell.detailTextLabel?.text = scheduleText.isEmpty ?
-                getScheduleText(from: selectedScheduleDays) : scheduleText
-            } else {
-                cell.detailTextLabel?.text = nil
-            }
-            cell.accessoryType = .disclosureIndicator
-        default:
-            break
-        }
-        
-        return cell
-    }
-}
-
-extension NewHabitViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        switch indexPath.row {
-        case 0:
-            print("Категория tapped")
-        case 1:
-            let scheduleVC = ScheduleViewController()
-            scheduleVC.selectedDays = Set(selectedScheduleDays)
-            
-            scheduleVC.onScheduleSelected = { [weak self] selectedDays, scheduleText in
-                self?.selectedScheduleDays = selectedDays
-                self?.scheduleText = scheduleText
-                self?.optionsTableView.reloadRows(at: [IndexPath(row: 1, section: 0)], with: .none)
-                self?.updateCreateButtonState()
-            }
-            navigationController?.pushViewController(scheduleVC, animated: true)
-        default:
-            break
-        }
-    }
-}
-
-extension NewHabitViewController: UITextFieldDelegate {
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let currentText = textField.text ?? ""
-        guard let stringRange = Range(range, in: currentText) else { return false }
-        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
-        
-        if updatedText.count > 38 {
-            showError(true)
-            return false
-        } else {
-            showError(false)
-            return true
-        }
-    }
-    
-    func textFieldDidChangeSelection(_ textField: UITextField) {
+extension NewHabitViewController: TrackerFormViewDelegate {
+    func trackerFormView(_ view: TrackerFormView, didChangeTitle text: String) {
+        formTitle = text
         updateCreateButtonState()
-        let text = textField.text ?? ""
-        if text.count > 38 {
-            showError(true)
-        } else {
-            showError(false)
-        }
     }
     
-    private func showError(_ show: Bool) {
-        errorLabel.isHidden = !show
-        tableViewTopConstraint?.constant = show ? 38 : 24
-        UIView.animate(withDuration: 0.2) {
-            self.view.layoutIfNeeded()
-        }
+    func trackerFormView(_ view: TrackerFormView, didSelectCategory optionView: TrackerOptionView) {
+        print("Категория tapped")
     }
     
-    func textFieldShouldClear(_ textField: UITextField) -> Bool {
-        showError(false)
-        return true
+    func trackerFormView(_ view: TrackerFormView, didSelectSchedule optionView: TrackerOptionView) {
+        let scheduleVC = ScheduleViewController()
+        let scheduleIndices = Set(formSchedule.map { $0.weekday })
+        scheduleVC.selectedDays = scheduleIndices
+        
+        scheduleVC.onScheduleSelected = { [weak self] selectedDays, scheduleText in
+            guard let self = self else { return }
+            self.selectedScheduleDays = selectedDays
+            self.scheduleText = scheduleText
+            
+            self.formSchedule = selectedDays.map { Schedule(weekday: $0) }
+            self.formView.updateSchedule(self.formSchedule)
+            self.updateCreateButtonState()
+        }
+        navigationController?.pushViewController(scheduleVC, animated: true)
     }
 }
