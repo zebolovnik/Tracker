@@ -18,6 +18,7 @@ final class ScheduleViewController: UIViewController {
     weak var delegate: ScheduleViewControllerDelegate?
     private let weekDays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
     var selectedDays: Set<Int> = []
+    var onScheduleSelected: (([Int], String) -> Void)?
     
     // MARK: - UI elements
     private lazy var tableView: UITableView = {
@@ -86,9 +87,20 @@ final class ScheduleViewController: UIViewController {
         readyButton.addTarget(self, action: #selector(readyButtonDidTap), for: .touchUpInside)
     }
     
+    private func getScheduleText() -> String {
+        if selectedDays.count == 7 {
+            return "Каждый день"
+        } else {
+            let daySymbols = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+            let selectedDaySymbols = Array(selectedDays).sorted().map { daySymbols[$0] }
+            return selectedDaySymbols.joined(separator: ", ")
+        }
+    }
+    
     // MARK: - Actions
     @objc private func readyButtonDidTap() {
-        delegate?.getConfiguredSchedule(Array(selectedDays).sorted())
+        let selectedDaysArray = Array(selectedDays).sorted()
+        onScheduleSelected?(selectedDaysArray, getScheduleText())
         navigationController?.popViewController(animated: true)
     }
 }
@@ -100,9 +112,7 @@ extension ScheduleViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ScheduleCell", for: indexPath) as? ScheduleCell else {
-            return UITableViewCell()
-        }
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ScheduleCell", for: indexPath) as? ScheduleCell else { return UITableViewCell() }
         
         let dayName = weekDays[indexPath.row]
         let isFirst = indexPath.row == 0
