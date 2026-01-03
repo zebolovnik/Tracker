@@ -16,8 +16,34 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         self.window = window
-        let tabBarController = TabBarController()
-        window.rootViewController = tabBarController
+        
+        showLaunchScreen()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.showMainInterface()
+        }
+        
         window.makeKeyAndVisible()
+    }
+    
+    private func showLaunchScreen() {
+        let launchViewController = UIViewController()
+        launchViewController.view.backgroundColor = UIColor(resource: .ypBlue)
+        
+        let launchImageView = UIImageView(image: UIImage(named: "splash_logo_image"))
+        launchImageView.translatesAutoresizingMaskIntoConstraints = false
+        launchImageView.contentMode = .scaleAspectFit
+        launchViewController.view.addSubview(launchImageView)
+        
+        NSLayoutConstraint.activate([
+            launchImageView.centerXAnchor.constraint(equalTo: launchViewController.view.safeAreaLayoutGuide.centerXAnchor),
+            launchImageView.centerYAnchor.constraint(equalTo: launchViewController.view.safeAreaLayoutGuide.centerYAnchor)
+        ])
+        
+        window?.rootViewController = launchViewController
+    }
+    
+    private func showMainInterface() {
+        let tabBarController = TabBarController()
+        window?.rootViewController = tabBarController
     }
 }
