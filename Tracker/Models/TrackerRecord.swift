@@ -2,13 +2,13 @@
 //  TrackerRecord.swift
 //  Tracker
 //
-//  Created by Nikolay Zebolov on 02.01.2026.
+//  Created by Nikolay Zebolov on 03.01.2026.
 //
 
+import Foundation
 import UIKit
 
-struct TrackerRecord: Hashable {
-    let trackerId: UUID
+struct TrackerRecord {
+    let id: UUID
     let date: Date
 }
-

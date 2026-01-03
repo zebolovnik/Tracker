@@ -1,3 +1,11 @@
+//
+//  Tracker.swift
+//  Tracker
+//
+//  Created by Nikolay Zebolov on 03.01.2026.
+//
+
+import Foundation
 import UIKit
 
 struct Tracker {
@@ -5,9 +13,7 @@ struct Tracker {
     let title: String
     let color: UIColor
     let emoji: String
-    let schedule: [Schedule]
+    let schedule: [WeekDay?]
 }
 
-struct Schedule {
-    let weekday: Int
-}
+
