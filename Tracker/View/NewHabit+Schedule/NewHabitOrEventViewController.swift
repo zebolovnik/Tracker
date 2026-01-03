@@ -11,11 +11,12 @@ protocol NewHabitOrEventViewControllerDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to category: TrackerCategory)
 }
 
-final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate {
+final class NewHabitOrEventViewController: UIViewController, ScheduleViewControllerDelegate {
     
     weak var trackerViewController: TrackerTypeViewController?
     weak var delegate: NewHabitOrEventViewControllerDelegate?
     
+    private var trackerItemsTopConstraint: NSLayoutConstraint!
     private var schedule: [WeekDay?] = []
     private let itemsForHabits = ["Категория", "Расписание"]
     private let itemsForEvents = ["Категория"]
@@ -48,9 +49,19 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
         return textField
     }()
     
+    private lazy var limitLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .ypRed
+        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.textAlignment = .center
+        label.text = "Ограничение 38 символов"
+        label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private lazy var trackerItems: UITableView = {
         let tableView = UITableView()
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
         tableView.clipsToBounds = true
@@ -70,6 +81,7 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
         button.tintColor = .ypWhite
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.isEnabled = false
         button.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -92,11 +104,11 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
         self.currentItems = isForHabits ? itemsForHabits : itemsForEvents
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    // Добавляем собственный инициализатор, если вы создаете объект программно
+    
     init() {
         super.init(nibName: nil, bundle: nil)
     }
@@ -120,13 +132,15 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
     
     private func addSubViews() {
         view.addSubview(titleLabel)
+        view.addSubview(trackerNameInput)
+        view.addSubview(limitLabel)
+        view.addSubview(trackerItems)
         view.addSubview(createButton)
         view.addSubview(cancelButton)
-        view.addSubview(trackerNameInput)
-        view.addSubview(trackerItems)
     }
     
     private func addConstraints() {
+        trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
         NSLayoutConstraint.activate([
             titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
@@ -135,10 +149,14 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
             trackerNameInput.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackerNameInput.heightAnchor.constraint(equalToConstant: 75),
             
-            trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24),
+            limitLabel.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 8),
+            limitLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            limitLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            limitLabel.heightAnchor.constraint(equalToConstant: 22),
+            
+            trackerItemsTopConstraint,
             trackerItems.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackerItems.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-//            trackerItems.heightAnchor.constraint(equalToConstant: 150),
             trackerItems.heightAnchor.constraint(equalToConstant: CGFloat(75 * currentItems.count)),
             
             createButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
@@ -153,18 +171,35 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
         ])
     }
     
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        print("Пользователь начал редактировать поле")
+    private func updateConstraints() {
+        if limitLabel.isHidden {
+            trackerItemsTopConstraint.isActive = false
+            trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
+        } else {
+            trackerItemsTopConstraint.isActive = false
+            trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: limitLabel.bottomAnchor, constant: 32)
+        }
+        trackerItemsTopConstraint.isActive = true
+        
+        UIView.animate(withDuration: 0.2) {
+            self.view.layoutIfNeeded()
+        }
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
+    private func validateCreateButtonState() {
+        let isForHabits = currentItems.contains("Расписание")
+        let isNameFilled = !(trackerNameInput.text?.trimmingCharacters(in: .whitespaces).isEmpty ?? true)
+        let isScheduleSelected = !schedule.isEmpty
+        
+        createButton.isEnabled = isForHabits ? (isNameFilled && isScheduleSelected) : isNameFilled
+        createButton.backgroundColor = createButton.isEnabled ? .ypBlack : .ypGray
     }
     
     func didUpdateSchedule(_ schedule: [WeekDay?]) {
         self.schedule = schedule
-        print("Updated schedule: \(schedule.map { $0?.rawValue ?? "None" })")
+        validateCreateButtonState()
+        trackerItems.reloadData()
+        print("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })")
     }
     
     private func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
@@ -176,7 +211,7 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
             viewCategories[existingCategoryIndex] = updatedCategory
             delegate?.addTracker(tracker, to: updatedCategory)
         } else {
-            let defaultCategory = TrackerCategory(title: "Домашний уют", trackers: [tracker])
+            let defaultCategory = TrackerCategory(title: "Мои трекеры", trackers: [tracker])
             viewCategories.append(defaultCategory)
             delegate?.addTracker(tracker, to: defaultCategory)
         }
@@ -186,12 +221,12 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
     private func createButtonTapped() {
         let newTracker = Tracker(
             id: UUID(),
-            title: trackerNameInput.text ?? "Без названия",
+            name: trackerNameInput.text ?? "Привычка",
             color: .colorSelected17,
-            emoji: "❤️", //"🌟"
+            emoji: "🌟",
             schedule: self.schedule
         )
-        let categoryTitle = self.title ?? "Default"
+        let categoryTitle = self.title ?? "Мои трекеры"
         
         addNewTracker(newTracker, to: categoryTitle)
         dismiss(animated: true, completion: nil)
@@ -201,6 +236,34 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
     @objc
     private func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)
+    }
+}
+
+extension NewHabitOrEventViewController: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        print("Пользователь начал редактировать поле")
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        validateCreateButtonState()
+    }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let currentText = (textField.text ?? "") as NSString
+        let updatedText = currentText.replacingCharacters(in: range, with: string)
+        
+        if updatedText.count >= 38 {
+            limitLabel.isHidden = false
+        } else {
+            limitLabel.isHidden = true
+        }
+        updateConstraints()
+        return true
     }
 }
 
@@ -230,30 +293,32 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
 
 extension NewHabitOrEventViewController: UITableViewDelegate{
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        return items.count
         return currentItems.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
         cell.selectionStyle = .none
         cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
-//        cell.textLabel?.text = items[indexPath.row]
         cell.textLabel?.text = currentItems[indexPath.row]
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17)
         cell.textLabel?.textColor = .ypBlack
         
-        if indexPath.row == 1 {
+        if indexPath.row == 1, currentItems.contains("Расписание") {
+            let shortWeekDays = schedule.compactMap { $0?.shortWeekDay }
+            print("Краткие дни недели: \(shortWeekDays)")
+            cell.detailTextLabel?.text = shortWeekDays.isEmpty ? "" : shortWeekDays.joined(separator: ", ")
+            cell.detailTextLabel?.text = shortWeekDays.joined(separator: ", ")
+            cell.detailTextLabel?.textColor = .ypGray
+            cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17)
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         }
-        
         let chevronImage = UIImage(named: "Chevron")
         if let chevronImage = chevronImage {
             let chevronImageView = UIImageView(image: chevronImage)
             cell.accessoryView = chevronImageView
         }
         cell.accessoryType = .disclosureIndicator
-//        cell.textLabel?.text = items[indexPath.row]
         return cell
     }
 }
