@@ -21,7 +21,7 @@ final class ScheduleViewController: UIViewController {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
-        label.font = .systemFont(ofSize: 16)
+        label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.text = "Расписание"
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -65,10 +65,6 @@ final class ScheduleViewController: UIViewController {
         addSubview()
         addConstraints()
     }
-
-    func loadSelectedSchedule(from schedule: [WeekDay?]) {
-        self.schedule = schedule
-    }
     
     private func navigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
@@ -95,6 +91,10 @@ final class ScheduleViewController: UIViewController {
             saveDaysButton.heightAnchor.constraint(equalToConstant: 60)
             
         ])
+    }
+    
+    func loadSelectedSchedule(from schedule: [WeekDay?]) {
+        self.schedule = schedule
     }
     
     @objc private func switchChanged(_ sender: UISwitch) {
@@ -132,6 +132,8 @@ extension ScheduleViewController: UITableViewDataSource {
         let weekDay = WeekDay.allCases[indexPath.row]
         
         cell.textLabel?.text = weekDay.rawValue
+        cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        cell.textLabel?.textColor = .ypBlack
         cell.selectionStyle = .none
         cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
         
@@ -143,6 +145,8 @@ extension ScheduleViewController: UITableViewDataSource {
         switchControl.isOn = schedule.contains(weekDay)
         switchControl.tag = indexPath.row
         switchControl.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
+        switchControl.tintColor = .ypBlue
+        switchControl.onTintColor = .ypBlue
         cell.accessoryView = switchControl
         
         return cell

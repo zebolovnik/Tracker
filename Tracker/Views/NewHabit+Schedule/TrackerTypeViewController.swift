@@ -15,7 +15,7 @@ final class TrackerTypeViewController: UIViewController {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
-        label.font = .systemFont(ofSize: 16)
+        label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.text = "Создание трекера"
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -103,7 +103,6 @@ final class TrackerTypeViewController: UIViewController {
         navigationController.modalPresentationStyle = .pageSheet
         present(navigationController, animated: true)
     }
-    
     
     @objc func handleSwipeDown() {
         self.dismiss(animated: true, completion: nil)
