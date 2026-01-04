@@ -9,7 +9,6 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
     private var visibleCategories: [TrackerCategory] = []
     private var trackers: [Tracker] = []
@@ -22,7 +21,7 @@ final class TrackersViewController: UIViewController {
     private let trackerCategoryStore = TrackerCategoryStore()
     private let trackerRecordStore = TrackerRecordStore()
     
-    private struct cellParams {
+    private struct CellParams {
         let cellCount: Int
         let leftInset: CGFloat
         let rightInset: CGFloat
@@ -40,7 +39,7 @@ final class TrackersViewController: UIViewController {
         }
     }
     
-    private let params = cellParams(
+    private let params = CellParams(
         cellCount: 2,
         leftInset: 16,
         rightInset: 16,
@@ -148,9 +147,6 @@ final class TrackersViewController: UIViewController {
         addConstraints()
         showContentOrPlaceholder()
         
-        newHabitOrEventViewController = NewHabitOrEventViewController()
-        newHabitOrEventViewController.delegate = self
-        
         loadCategories()
         dateChanged()
     }
@@ -195,15 +191,9 @@ final class TrackersViewController: UIViewController {
     }
     
     private func showContentOrPlaceholder() {
-        if visibleCategories.isEmpty {
-            collectionView.isHidden = true
-            errorImage.isHidden = false
-            errorLabel.isHidden = false
-        } else {
-            collectionView.isHidden = false
-            errorImage.isHidden = true
-            errorLabel.isHidden = true
-        }
+        collectionView.isHidden = visibleCategories.isEmpty
+        errorImage.isHidden = !visibleCategories.isEmpty
+        errorLabel.isHidden = !visibleCategories.isEmpty
     }
     
     // MARK: - Actions
@@ -250,12 +240,7 @@ final class TrackersViewController: UIViewController {
                 trackers: trackers
             )
         }
-        if visibleCategories.isEmpty {
-            print("Update Visible Categories: Видимые категории: \(visibleCategories)")
-            showErrorImage(true)
-        } else {
-            showErrorImage(false)
-        }
+        showErrorImage(visibleCategories.isEmpty)
         collectionView.reloadData()
     }
     
@@ -319,14 +304,14 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         }
     }
     
-    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-        do {
-            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date) != nil
-        } catch {
-            print("Ошибка при проверке записи трекера: \(error)")
-            return false
-        }
-    }
+//    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
+//        do {
+//            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date)
+//        } catch {
+//            print("Ошибка при проверке записи трекера: \(error)")
+//            return false
+//        }
+//    }
 }
 
 extension TrackersViewController: TrackerCellDelegate {
