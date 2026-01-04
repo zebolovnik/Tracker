@@ -145,7 +145,7 @@ final class TrackerCell: UICollectionViewCell {
         ])
     }
     
-    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) { // TODO
+    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
         self.trackerId = tracker.id
         self.isCompletedToday = isCompletedToday
         self.indexPath = indexPath

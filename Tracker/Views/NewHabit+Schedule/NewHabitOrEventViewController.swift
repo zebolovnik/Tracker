@@ -22,6 +22,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private let itemsForEvents = ["Категория"]
     private var currentItems: [String] = []
     private var categoryTitle: String?
+    private var emoji: String?
+    private var color: UIColor?
     
     private let emojis = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪" ]
@@ -85,24 +87,18 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 5
         
-        let screenWidth = UIScreen.main.bounds.width
-        let spacing: CGFloat = 5
-        let sideInset: CGFloat = 18
-        let columns: CGFloat = 6
-        
-        let itemWidth = (screenWidth - sideInset * 2 - spacing * (columns - 1)) / columns
+        let itemWidth = (UIScreen.main.bounds.width - 18 * 2 - 5 * 5) / 6
         layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
-        layout.headerReferenceSize = CGSize(width: screenWidth, height: 34)
+        
+        layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 34)
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .white
-        collectionView.register(EmojiCell.self,
-                               forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
-        collectionView.register(ColorCell.self,
-                               forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
+        collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
+        collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
         collectionView.register(CollectionHeaderView.self,
-                               forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-                               withReuseIdentifier: CollectionHeaderView.reuseIdentifier)
+                                forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                                withReuseIdentifier: CollectionHeaderView.reuseIdentifier)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
@@ -262,8 +258,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let newTracker = Tracker(
             id: UUID(),
             name: trackerNameInput.text ?? "Привычка",
-            color: .colorSelected17,
-            emoji: "🌟",
+            color: self.color ?? .colorSelected17,
+            emoji: self.emoji ?? "🌟",
             schedule: self.schedule
         )
         
@@ -408,11 +404,13 @@ extension NewHabitOrEventViewController: UICollectionViewDelegate, UICollectionV
         if indexPath.section == 0 {
             let previousIndex = selectedEmojiIndex
             selectedEmojiIndex = indexPath
+            self.emoji = emojis[indexPath.item]
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
             print("Выбран эмодзи: \(emojis[indexPath.item])")
         } else {
             let previousIndex = selectedColorIndex
             selectedColorIndex = indexPath
+            self.color = colors[indexPath.item]
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
             print("Выбран цвет: \(colors[indexPath.item])")
         }
