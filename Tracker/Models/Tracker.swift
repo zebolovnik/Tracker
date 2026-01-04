@@ -15,5 +15,3 @@ struct Tracker {
     let emoji: String
     let schedule: [WeekDay?]
 }
-
-

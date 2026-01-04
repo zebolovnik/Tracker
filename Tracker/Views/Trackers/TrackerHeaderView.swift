@@ -10,7 +10,7 @@ import UIKit
 final class TrackerHeaderView: UICollectionReusableView {
     
     static let switchHeaderIdentifier = String(describing: TrackerHeaderView.self)
-    
+
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 19, weight: .bold)
