@@ -24,6 +24,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private var categoryTitle: String?
     private var emoji: String?
     private var color: UIColor?
+    private var previousText: String?
     
     private let emojis = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪" ]
@@ -83,25 +84,35 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
+        configureLayout(layout)
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        configureCollectionView(collectionView)
+        
+        return collectionView
+    }()
+    
+    private func configureLayout(_ layout: UICollectionViewFlowLayout) {
         layout.sectionInset = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 5
         
         let itemWidth = (UIScreen.main.bounds.width - 18 * 2 - 5 * 5) / 6
         layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
-        
         layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 34)
-        
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    }
+    
+    private func configureCollectionView(_ collectionView: UICollectionView) {
         collectionView.backgroundColor = .white
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
         collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
-        collectionView.register(CollectionHeaderView.self,
-                                forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-                                withReuseIdentifier: CollectionHeaderView.reuseIdentifier)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        return collectionView
-    }()
+        collectionView.register(
+            CollectionHeaderView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+            withReuseIdentifier: CollectionHeaderView.reuseIdentifier
+        )
+    }
     
     private lazy var createButton: UIButton = {
         let button = UIButton()
@@ -258,7 +269,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let newTracker = Tracker(
             id: UUID(),
             name: trackerNameInput.text ?? "Привычка",
-            color: self.color ?? .colorSelected17,
+            color: self.color ?? .colorSelected5,
             emoji: self.emoji ?? "🌟",
             schedule: self.schedule
         )
@@ -288,6 +299,8 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
     }
     
     func textFieldDidChangeSelection(_ textField: UITextField) {
+        guard let text = textField.text, text != previousText else { return }
+        previousText = text
         validateCreateButtonState()
     }
     
@@ -310,7 +323,6 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
         switch indexPath.row {
         case 0:
             print("Категория нажата")
-            // TODO - добавить логику для выбора категории
         case 1:
             print("Расписание нажато")
             let scheduleViewController = ScheduleViewController()
