@@ -99,6 +99,7 @@ final class TrackersViewController: UIViewController {
         datePicker.datePickerMode = .date
         let localID = Locale.preferredLanguages.first ?? "ru_RU"
         datePicker.locale = Locale(identifier: localID)
+        //        datePicker.maximumDate = Date() // Второй вариант с ограничением дат, интуитивно понятнее пользователю блок, но не дающий посмотреть что в следующие дни предстоит.Хотя вариате что есть сейчас алерта (не предусмотрен макетом) явно не хватает чтобы уведомить пользователя, почему нельзя нажать на кнопку.
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         return datePicker
@@ -312,11 +313,10 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
 extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
         let todayDate = Date()
-        guard datePicker.date <= todayDate else {
+        guard currentDate <= todayDate else {
             print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
             return
         }
-        
         let trackerRecord = TrackerRecord(id: id, date: datePicker.date)
         print("Выполнен трекер с id \(id) о чем создана запись \(trackerRecord.date)")
         completedTrackers.append(trackerRecord)

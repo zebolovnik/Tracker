@@ -84,24 +84,25 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         layout.sectionInset = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 5
-
+        
         let screenWidth = UIScreen.main.bounds.width
-        let horizontalInsets: CGFloat = 18 * 2
-        let spacing: CGFloat = 5 * 5
-        let itemWidth = (screenWidth - horizontalInsets - spacing) / 6
-
+        let spacing: CGFloat = 5
+        let sideInset: CGFloat = 18
+        let columns: CGFloat = 6
+        
+        let itemWidth = (screenWidth - sideInset * 2 - spacing * (columns - 1)) / columns
         layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
-        layout.headerReferenceSize = CGSize(width: screenWidth, height: 40)
-
+        layout.headerReferenceSize = CGSize(width: screenWidth, height: 34)
+        
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .white
-        collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
-        collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
-        collectionView.register(
-            CollectionHeaderView.self,
-            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-            withReuseIdentifier: CollectionHeaderView.reuseIdentifier
-        )
+        collectionView.register(EmojiCell.self,
+                               forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
+        collectionView.register(ColorCell.self,
+                               forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
+        collectionView.register(CollectionHeaderView.self,
+                               forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                               withReuseIdentifier: CollectionHeaderView.reuseIdentifier)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
@@ -224,7 +225,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             cancelButton.rightAnchor.constraint(equalTo: createButton.leftAnchor, constant: -8),
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
             
-            collectionView.topAnchor.constraint(equalTo: trackerItems.bottomAnchor, constant: 32),
+            collectionView.topAnchor.constraint(equalTo: trackerItems.bottomAnchor, constant: 16),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: createButton.topAnchor, constant: -16),

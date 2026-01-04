@@ -13,7 +13,7 @@ final class CollectionHeaderView: UICollectionReusableView {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 19, weight: .bold)
+        label.font = .systemFont(ofSize: 19, weight: .bold)
         label.textColor = .ypBlack
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
