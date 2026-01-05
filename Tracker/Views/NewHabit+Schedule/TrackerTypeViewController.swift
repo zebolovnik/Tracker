@@ -51,7 +51,7 @@ final class TrackerTypeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
         
@@ -60,7 +60,7 @@ final class TrackerTypeViewController: UIViewController {
         view.addGestureRecognizer(swipeDownGesture)
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }

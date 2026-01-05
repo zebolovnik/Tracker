@@ -143,7 +143,7 @@ final class TrackersViewController: UIViewController {
         
         trackerCategoryStore.delegate = self
         
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
@@ -187,7 +187,7 @@ final class TrackersViewController: UIViewController {
         ])
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: false)
         guard (navigationController?.navigationBar) != nil else { return }
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
@@ -204,7 +204,7 @@ final class TrackersViewController: UIViewController {
     
     @objc
     private func didTapPlusButton() {
-        print("Кнопка плюс нажата и открывается страница выбора типа трекера")
+        print("🔘 Tapped + и открывается страница выбора типа трекера")
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -259,7 +259,6 @@ extension TrackersViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
-        // TODO сортировка при выборе в поле поиска
     }
 }
 
@@ -308,14 +307,14 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         }
     }
     
-//    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-//        do {
-//            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date)
-//        } catch {
-//            print("Ошибка при проверке записи трекера: \(error)")
-//            return false
-//        }
-//    }
+    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
+        do {
+            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date) != nil
+        } catch {
+            print("Ошибка при проверке записи трекера: \(error)")
+            return false
+        }
+    }
 }
 
 extension TrackersViewController: TrackerCellDelegate {

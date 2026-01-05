@@ -45,9 +45,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
     }
-
+    
     // MARK: - Core Data stack
-
+    
     lazy var persistentContainer: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "DataModel")
         container.loadPersistentStores { _, error in
@@ -57,13 +57,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         return container
     }()
-
+    
     // MARK: - Core Data Saving support
-
+    
     func saveContext() {
         let context = persistentContainer.viewContext
         guard context.hasChanges else { return }
-
+        
         do {
             try context.save()
         } catch {
@@ -72,7 +72,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
         }
     }
-
+    
     func applicationWillTerminate(_ application: UIApplication) {
         saveContext()
     }

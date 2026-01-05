@@ -5,7 +5,6 @@
 //  Created by Nikolay Zebolov on 05.01.2026.
 //
 
-import Foundation
 import UIKit
 
 protocol CategoryViewControllerDelegate: AnyObject {
@@ -16,7 +15,16 @@ final class CategoryViewController: UIViewController {
     
     weak var delegate: CategoryViewControllerDelegate?
     
-    private var categoryViewModel = CategoryViewModel()
+    private var categoryViewModel: CategoryViewModel
+    
+    init(categoryViewModel: CategoryViewModel) {
+        self.categoryViewModel = categoryViewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -37,7 +45,7 @@ final class CategoryViewController: UIViewController {
     
     private lazy var placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно объединить по смыслу"
+        label.text = "Привычки и события можно\nобъединить по смыслу"
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
         label.numberOfLines = 2
@@ -79,7 +87,7 @@ final class CategoryViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         setupBindings()
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
     }
@@ -92,7 +100,7 @@ final class CategoryViewController: UIViewController {
         }
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }
@@ -188,14 +196,17 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 75
+        75
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let categoryName = categoryViewModel.getCategories()[indexPath.row]
         categoryViewModel.selectCategory(categoryName)
         delegate?.didSelectCategory(categoryName)
-        dismiss(animated: true, completion: nil)
+        tableView.reloadData()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.dismiss(animated: true, completion: nil)
+        }
     }
 }
 
