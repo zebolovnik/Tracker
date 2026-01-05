@@ -77,7 +77,7 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    var  actionButton: UIButton = {
+    private lazy var actionButton: UIButton = {
         let button = UIButton()
         let buttonSize = 34
         button.layer.cornerRadius = 34 / 2
@@ -159,15 +159,9 @@ final class TrackerCell: UICollectionViewCell {
         let wordDay = dayWord(for: completedDay)
         dayNumberView.text = "\(completedDay) \(wordDay)"
         
-        if isCompletedToday {
-            actionButton.tintColor = .ypWhite
-            actionButton.backgroundColor = tracker.color
-            actionButton.alpha = 0.3
-        } else {
-            actionButton.tintColor = tracker.color
-            actionButton.backgroundColor = .ypWhite
-            actionButton.alpha = 1
-        }
+        actionButton.tintColor = isCompletedToday ? .ypWhite : tracker.color
+        actionButton.backgroundColor = isCompletedToday ? tracker.color : .ypWhite
+        actionButton.alpha = isCompletedToday ? 0.3 : 1
         
         let image = isCompletedToday ? doneImage : plusImage
         actionButton.setImage(image, for: .normal)

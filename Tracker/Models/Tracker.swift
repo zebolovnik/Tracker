@@ -5,7 +5,6 @@
 //  Created by Nikolay Zebolov on 03.01.2026.
 //
 
-import Foundation
 import UIKit
 
 struct Tracker {
@@ -15,5 +14,3 @@ struct Tracker {
     let emoji: String
     let schedule: [WeekDay?]
 }
-
-

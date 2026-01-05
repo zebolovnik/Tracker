@@ -16,12 +16,25 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     weak var trackerViewController: TrackerTypeViewController?
     weak var delegate: NewHabitOrEventViewControllerDelegate?
     
-    private var trackerItemsTopConstraint: NSLayoutConstraint!
+    private var trackerItemsTopConstraint: NSLayoutConstraint?
+    
+    private let maxSymbolNumber = 38
+    
     private var schedule: [WeekDay?] = []
     private let itemsForHabits = ["Категория", "Расписание"]
     private let itemsForEvents = ["Категория"]
     private var currentItems: [String] = []
     private var categoryTitle: String?
+    private var emoji: String?
+    private var color: UIColor?
+    private var previousText: String?
+    
+    private let emojis = [
+        "🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪" ]
+    private let colors: [UIColor] = [
+        .colorSelected1, .colorSelected2, .colorSelected3, .colorSelected4, .colorSelected5, .colorSelected6, .colorSelected7, .colorSelected8, .colorSelected9, .colorSelected10, .colorSelected11, .colorSelected12, .colorSelected13, .colorSelected14, .colorSelected15, .colorSelected16, .colorSelected17, .colorSelected18 ]
+    private var selectedEmojiIndex: IndexPath?
+    private var selectedColorIndex: IndexPath?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -72,6 +85,38 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         return tableView
     }()
     
+    private lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        configureLayout(layout)
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        configureCollectionView(collectionView)
+        
+        return collectionView
+    }()
+    
+    private func configureLayout(_ layout: UICollectionViewFlowLayout) {
+        layout.sectionInset = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 5
+        
+        let itemWidth = (UIScreen.main.bounds.width - 18 * 2 - 5 * 5) / 6
+        layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
+        layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 34)
+    }
+    
+    private func configureCollectionView(_ collectionView: UICollectionView) {
+        collectionView.backgroundColor = .white
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
+        collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
+        collectionView.register(
+            CollectionHeaderView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+            withReuseIdentifier: CollectionHeaderView.reuseIdentifier
+        )
+    }
+    
     private lazy var createButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypGray
@@ -104,8 +149,9 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         super.init(nibName: nil, bundle: nil)
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     init() {
@@ -119,7 +165,9 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         trackerItems.reloadData()
         trackerItems.delegate = self
         trackerItems.dataSource = self
-        navigationBar()
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        
         updateNavigationBarTitle(forItems: currentItems)
         addSubViews()
         addConstraints()
@@ -138,13 +186,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         } else if items == itemsForEvents {
             titleLabel.text = "Новое нерегулярное событие"
         }
-        guard let navigationBar = navigationController?.navigationBar else { return }
-        navigationBar.topItem?.titleView = titleLabel
-    }
-    
-    private func navigationBar() {
-        guard let navigationBar = navigationController?.navigationBar else { return }
-        navigationBar.topItem?.titleView = titleLabel
+        navigationController?.navigationBar.topItem?.titleView = titleLabel
     }
     
     private func addSubViews() {
@@ -152,6 +194,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         view.addSubview(trackerNameInput)
         view.addSubview(limitLabel)
         view.addSubview(trackerItems)
+        view.addSubview(collectionView)
         view.addSubview(createButton)
         view.addSubview(cancelButton)
     }
@@ -171,7 +214,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             limitLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             limitLabel.heightAnchor.constraint(equalToConstant: 22),
             
-            trackerItemsTopConstraint,
+            trackerItemsTopConstraint!,
             trackerItems.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackerItems.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackerItems.heightAnchor.constraint(equalToConstant: CGFloat(75 * currentItems.count)),
@@ -185,18 +228,21 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             cancelButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             cancelButton.rightAnchor.constraint(equalTo: createButton.leftAnchor, constant: -8),
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            collectionView.topAnchor.constraint(equalTo: trackerItems.bottomAnchor, constant: 16),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: createButton.topAnchor, constant: -16),
+            
         ])
     }
     
     private func updateConstraints() {
-        if limitLabel.isHidden {
-            trackerItemsTopConstraint.isActive = false
-            trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
-        } else {
-            trackerItemsTopConstraint.isActive = false
-            trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: limitLabel.bottomAnchor, constant: 32)
-        }
-        trackerItemsTopConstraint.isActive = true
+        trackerItemsTopConstraint?.isActive = false
+        let topAnchor = limitLabel.isHidden ? trackerNameInput.bottomAnchor : limitLabel.bottomAnchor
+        let constant = limitLabel.isHidden ? 24 : 32
+        trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: topAnchor, constant: CGFloat(constant))
+        trackerItemsTopConstraint?.isActive = true
         
         UIView.animate(withDuration: 0.2) {
             self.view.layoutIfNeeded()
@@ -217,8 +263,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let newTracker = Tracker(
             id: UUID(),
             name: trackerNameInput.text ?? "Привычка",
-            color: .colorSelected17,
-            emoji: "🌟",
+            color: self.color ?? .colorSelected5,
+            emoji: self.emoji ?? "🌟",
             schedule: self.schedule
         )
         
@@ -247,14 +293,15 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
     }
     
     func textFieldDidChangeSelection(_ textField: UITextField) {
+        guard let text = textField.text, text != previousText else { return }
+        previousText = text
         validateCreateButtonState()
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentText = (textField.text ?? "") as NSString
         let updatedText = currentText.replacingCharacters(in: range, with: string)
-        let maxSymbolNumber = 38
-        limitLabel.isHidden = !(updatedText.count >= maxSymbolNumber)
+        limitLabel.isHidden = updatedText.count < maxSymbolNumber
         updateConstraints()
         return true
     }
@@ -317,5 +364,60 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
         }
         cell.accessoryType = .disclosureIndicator
         return cell
+    }
+}
+
+extension NewHabitOrEventViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 2
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return section == 0 ? emojis.count : colors.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.section == 0 {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmojiCell.reuseIdentifier, for: indexPath) as? EmojiCell else {
+                fatalError("Unable to dequeue EmojiCell")
+            }
+            cell.configure(with: emojis[indexPath.item], isSelected: indexPath == selectedEmojiIndex)
+            return cell
+        } else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ColorCell.reuseIdentifier, for: indexPath) as? ColorCell else {
+                fatalError("Unable to dequeue ColorCell")
+            }
+            cell.configure(with: colors[indexPath.item], isSelected: indexPath == selectedColorIndex)
+            return cell
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard kind == UICollectionView.elementKindSectionHeader,
+              let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: CollectionHeaderView.reuseIdentifier,
+                for: indexPath
+              ) as? CollectionHeaderView else {
+            fatalError("Unable to dequeue CollectionHeaderView")
+        }
+        header.configure(with: indexPath.section == 0 ? "Emoji" : "Цвет")
+        return header
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            let previousIndex = selectedEmojiIndex
+            selectedEmojiIndex = indexPath
+            self.emoji = emojis[indexPath.item]
+            collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
+            print("Выбран эмодзи: \(emojis[indexPath.item])")
+        } else {
+            let previousIndex = selectedColorIndex
+            selectedColorIndex = indexPath
+            self.color = colors[indexPath.item]
+            collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
+            print("Выбран цвет: \(colors[indexPath.item])")
+        }
     }
 }
