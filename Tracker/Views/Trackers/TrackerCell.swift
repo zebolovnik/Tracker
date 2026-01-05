@@ -93,9 +93,9 @@ final class TrackerCell: UICollectionViewCell {
         addConstraints()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func addSubview() {
@@ -158,15 +158,9 @@ final class TrackerCell: UICollectionViewCell {
         let wordDay = dayWord(for: completedDay)
         dayNumberView.text = "\(completedDay) \(wordDay)"
         
-        if isCompletedToday {
-            actionButton.tintColor = .ypWhite
-            actionButton.backgroundColor = tracker.color
-            actionButton.alpha = 0.3
-        } else {
-            actionButton.tintColor = tracker.color
-            actionButton.backgroundColor = .ypWhite
-            actionButton.alpha = 1
-        }
+        actionButton.tintColor = isCompletedToday ? .ypWhite : tracker.color
+        actionButton.backgroundColor = isCompletedToday ? tracker.color : .ypWhite
+        actionButton.alpha = isCompletedToday ? 0.3 : 1
         
         let image = isCompletedToday ? doneImage : plusImage
         actionButton.setImage(image, for: .normal)

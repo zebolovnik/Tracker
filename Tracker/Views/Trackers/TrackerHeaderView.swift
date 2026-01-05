@@ -25,10 +25,10 @@ final class TrackerHeaderView: UICollectionReusableView {
         addSubview(titleLabel)
         addConstraints()
     }
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
-    
     private func addConstraints() {
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 28),

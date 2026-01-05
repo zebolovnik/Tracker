@@ -9,7 +9,6 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
     private var visibleCategories: [TrackerCategory] = []
     private var trackers: [Tracker] = []
@@ -147,9 +146,6 @@ final class TrackersViewController: UIViewController {
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
-        
-        newHabitOrEventViewController = NewHabitOrEventViewController()
-        newHabitOrEventViewController.delegate = self
         
         loadCategories()
         dateChanged()
@@ -303,15 +299,6 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             return completedDates.contains { Calendar.current.isDate($0, inSameDayAs: datePicker.date) }
         } catch {
             print("Ошибка при получении выполненных дней трекера: \(error)")
-            return false
-        }
-    }
-    
-    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-        do {
-            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date) != nil
-        } catch {
-            print("Ошибка при проверке записи трекера: \(error)")
             return false
         }
     }
