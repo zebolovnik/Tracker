@@ -53,10 +53,10 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
         guard let trackerToDelete = try context.fetch(fetchRequest).first else { return }
-        context.perform {
-            self.context.delete(trackerToDelete)
-            self.saveContext()
-        }
+            context.perform {
+                self.context.delete(trackerToDelete)
+                self.saveContext()
+            }
     }
     
     private func updateTrackers(_ trackerCoreData: TrackerCoreData, with tracker: Tracker) {
@@ -74,7 +74,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             trackerCoreData.schedule = nil
         }
     }
-    
+
     private func createTracker(from trackerCoreData: TrackerCoreData) throws -> Tracker {
         guard let id = trackerCoreData.id ?? UUID() as UUID?,
               let name = trackerCoreData.name else {
