@@ -18,31 +18,26 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        let trackersViewController = TrackersViewController()
-        let trackersNavigationController = UINavigationController(rootViewController: trackersViewController)
-        trackersNavigationController.tabBarItem = UITabBarItem(
-            title: "Трекеры",
-            image: UIImage(named: "Disc"),
-            tag: 0
-        )
+        let hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        let rootViewController: UIViewController
 
-        let statisticsViewController = StatisticsViewController()
-        let statisticsNavigationController = UINavigationController(rootViewController: statisticsViewController)
-        statisticsNavigationController.tabBarItem = UITabBarItem(
-            title: "Статистика",
-            image: UIImage(named: "Rabbit"),
-            tag: 1
-        )
-
-        let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [
-            trackersNavigationController,
-            statisticsNavigationController
-        ]
+        if hasSeenOnboarding {
+            rootViewController = TabBarViewController()
+        } else {
+            let onboardingViewController = OnboardingViewController(
+                transitionStyle: .scroll,
+                navigationOrientation: .horizontal
+            )
+            rootViewController = onboardingViewController
+        }
 
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = tabBarController
+        window.rootViewController = rootViewController
         self.window = window
         window.makeKeyAndVisible()
+    }
+
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
     }
 }
