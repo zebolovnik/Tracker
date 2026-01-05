@@ -149,7 +149,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         super.init(nibName: nil, bundle: nil)
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
     }
@@ -284,7 +283,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
 
 extension NewHabitOrEventViewController: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        print("Пользователь начал редактировать поле")
+        print("✍️ Пользователь начал редактировать поле")
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -304,6 +303,13 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
         limitLabel.isHidden = updatedText.count < maxSymbolNumber
         updateConstraints()
         return true
+    }
+}
+
+extension NewHabitOrEventViewController: CategoryViewControllerDelegate {
+    func didSelectCategory(_ category: String) {
+        self.categoryTitle = category
+        trackerItems.reloadData()
     }
 }
 
@@ -342,6 +348,12 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
         cell.textLabel?.text = currentItems[indexPath.row]
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.textLabel?.textColor = .ypBlack
+        
+        if indexPath.row == 0 {
+            cell.detailTextLabel?.text = categoryTitle ?? ""
+            cell.detailTextLabel?.textColor = .ypGray
+            cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17)
+        }
         
         if indexPath.row == 1, currentItems.contains("Расписание") {
             let shortWeekDays = schedule.compactMap { $0?.shortWeekDay }

@@ -12,7 +12,7 @@ final class CategoryCell: UITableViewCell {
     
     private let checkmarkImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "Checkmark")
+        imageView.image = UIImage(named: "CategoryCheckmark")
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.isHidden = true

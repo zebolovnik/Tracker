@@ -78,10 +78,18 @@ final class CategoryViewController: UIViewController {
         view.backgroundColor = .ypWhite
         tableView.delegate = self
         tableView.dataSource = self
+        setupBindings()
         navigationBar()
-        showContentOrPlaceholder()
         addSubViews()
         addConstraints()
+    }
+    
+    private func setupBindings() {
+        categoryViewModel.onCategoriesUpdated = { [weak self] categories in
+            self?.tableView.reloadData()
+            self?.updateTableViewHeight()
+            self?.showContentOrPlaceholder()
+        }
     }
     
     private func navigationBar() {

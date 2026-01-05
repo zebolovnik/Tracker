@@ -159,9 +159,15 @@ final class TrackerCell: UICollectionViewCell {
         let wordDay = dayWord(for: completedDay)
         dayNumberView.text = "\(completedDay) \(wordDay)"
         
-        actionButton.tintColor = isCompletedToday ? .ypWhite : tracker.color
-        actionButton.backgroundColor = isCompletedToday ? tracker.color : .ypWhite
-        actionButton.alpha = isCompletedToday ? 0.3 : 1
+        if isCompletedToday {
+            actionButton.tintColor = .ypWhite
+            actionButton.backgroundColor = tracker.color
+            actionButton.alpha = 0.3
+        } else {
+            actionButton.tintColor = tracker.color
+            actionButton.backgroundColor = .ypWhite
+            actionButton.alpha = 1
+        }
         
         let image = isCompletedToday ? doneImage : plusImage
         actionButton.setImage(image, for: .normal)

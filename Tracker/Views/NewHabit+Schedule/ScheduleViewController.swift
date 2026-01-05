@@ -42,6 +42,7 @@ final class ScheduleViewController: UIViewController {
         return tableView
     }()
     
+    
     private lazy var saveDaysButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
@@ -53,6 +54,7 @@ final class ScheduleViewController: UIViewController {
         button.addTarget(self, action: #selector(saveDays), for: .touchUpInside)
         return button
     }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()

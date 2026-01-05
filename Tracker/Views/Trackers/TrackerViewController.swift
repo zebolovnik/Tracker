@@ -9,6 +9,7 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
+    private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
     private var visibleCategories: [TrackerCategory] = []
     private var trackers: [Tracker] = []
@@ -146,6 +147,9 @@ final class TrackersViewController: UIViewController {
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
+        
+        newHabitOrEventViewController = NewHabitOrEventViewController()
+        newHabitOrEventViewController.delegate = self
         
         loadCategories()
         dateChanged()
