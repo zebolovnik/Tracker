@@ -116,7 +116,7 @@ final class PageViewController: UIViewController {
     }
     
     @objc private func onboardingButtonTapped() {
-        print("🔘 Tapped onboardingButtonTapped - онбординг закрывается и больше не должен быть показан")
+        Logger.logPrint("🔘 Tapped onboardingButtonTapped - онбординг закрывается", category: "Onboarding")
         UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
         didFinishOnboarding?()
     }

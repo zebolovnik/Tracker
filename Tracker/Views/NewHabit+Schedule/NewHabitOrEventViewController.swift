@@ -181,7 +181,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         self.schedule = schedule
         validateCreateButtonState()
         trackerItems.reloadData()
-        print("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })")
+        Logger.logPrint("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })", category: "Habit")
     }
     
     private func updateNavigationBarTitle(forItems items: [String]) {
@@ -285,8 +285,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             trackers: [newTracker])
         delegate?.addTracker(newTracker, to: categoryTracker)
         presentingViewController?.presentingViewController?.dismiss(animated: true)
-        print("🔘 Tapped Создать и в категорию: \(categoryTracker.title) добавляется трекер: \(newTracker.name) ")
-    }
+        Logger.logPrint("Tapped Создать и в категорию: \(categoryTracker.title) добавляется трекер: \(newTracker.name)", category: "UI")    }
     
     @objc
     private func cancelButtonTapped() {
@@ -296,7 +295,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
 
 extension NewHabitOrEventViewController: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        print("✍️ Пользователь начал редактировать поле")
+        Logger.logPrint("✍️ Пользователь начал редактировать поле", category: "UI")
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -335,7 +334,7 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch indexPath.row {
         case 0:
-            print("🔘 Tapped Категория")
+            Logger.logPrint("🔘 Tapped Категория", category: "UI")
             let categoryViewModel = CategoryViewModelFactory.createCategoryViewModel()
             let categoryViewController = CategoryViewController(categoryViewModel: categoryViewModel)
             
@@ -344,7 +343,7 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
             navigationController.modalPresentationStyle = .pageSheet
             present(navigationController, animated: true)
         case 1:
-            print("🔘 Tapped Расписание")
+            Logger.logPrint("🔘 Tapped Расписание", category: "UI")
             let scheduleViewController = ScheduleViewController()
             scheduleViewController.delegate = self
             scheduleViewController.loadSelectedSchedule(from: schedule)
@@ -378,7 +377,7 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
         
         if indexPath.row == 1, currentItems.contains("Расписание") {
             let shortWeekDays = schedule.compactMap { $0?.shortWeekDay }
-            print("Отображено расписание - краткие дни недели: \(shortWeekDays)")
+            Logger.logPrint("Отображено расписание - краткие дни недели: \(shortWeekDays)", category: "UI")
             cell.detailTextLabel?.text = shortWeekDays.isEmpty ? "" : shortWeekDays.joined(separator: ", ")
             cell.detailTextLabel?.text = shortWeekDays.joined(separator: ", ")
             cell.detailTextLabel?.textColor = .ypGray
@@ -444,13 +443,13 @@ extension NewHabitOrEventViewController: UICollectionViewDelegate, UICollectionV
             selectedEmojiIndex = indexPath
             self.emoji = emojis[indexPath.item]
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
-            print("Выбран эмодзи: \(emojis[indexPath.item])")
+            Logger.logPrint("Выбран эмодзи: \(emojis[indexPath.item])", category: "UI")
         } else {
             let previousIndex = selectedColorIndex
             selectedColorIndex = indexPath
             self.color = colors[indexPath.item]
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
-            print("Выбран цвет: \(colors[indexPath.item])")
+            Logger.logPrint("Выбран цвет: \(colors[indexPath.item])", category: "UI")
         }
     }
 }

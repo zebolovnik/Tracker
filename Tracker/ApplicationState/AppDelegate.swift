@@ -27,13 +27,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             if let storeURL = storeURL {
                 do {
                     try FileManager.default.removeItem(at: storeURL)
-                    print("Старый persistent store удален.")
+                    Logger.logPrint("Старый persistent store удален.", category: "Data")
                 } catch {
-                    print("Ошибка удаления старого persistent store: \(error)")
+                    Logger.logPrint("Ошибка удаления старого persistent store: \(error)", category: "Error")
                 }
             }
         } else {
-            print("Не удалось найти persistent store.")
+            Logger.logPrint("Не удалось найти persistent store.", category: "Error")
         }
     }
     
