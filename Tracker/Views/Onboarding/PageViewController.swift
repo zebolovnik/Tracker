@@ -62,9 +62,8 @@ final class PageViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func viewDidLoad() {
@@ -116,7 +115,7 @@ final class PageViewController: UIViewController {
     }
     
     @objc private func onboardingButtonTapped() {
-        Logger.logPrint("🔘 Tapped onboardingButtonTapped - онбординг закрывается", category: "Onboarding")
+        print("🔘 Tapped onboardingButtonTapped - онбординг закрывается и больше не должен быть показан")
         UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
         didFinishOnboarding?()
     }

@@ -209,6 +209,41 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
             self.dismiss(animated: true, completion: nil)
         }
     }
+    
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let category = categoryViewModel.getCategories()[indexPath.row]
+        
+        let editAction = UIAction(title: "Редактировать", handler: { _ in
+            // TODO редактирование категории
+        })
+        
+        let deleteAction = UIAction(title: "Удалить", attributes: .destructive, handler: { _ in
+            self.showDeleteCategoryAlert {
+                self.categoryViewModel.deleteCategory(category)
+                self.updateTableViewHeight()
+                tableView.reloadData()
+                self.showContentOrPlaceholder()
+            }
+        })
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            return UIMenu(title: "", children: [editAction, deleteAction])
+        }
+    }
+    
+    private func showDeleteCategoryAlert(confirmHandler: @escaping () -> Void) {
+        let alert = UIAlertController(title: "Эта категория точно не нужна?", message: nil, preferredStyle: .actionSheet)
+        
+        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { _ in
+            confirmHandler()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Отменить", style: .cancel, handler: nil)
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true, completion: nil)
+    }
 }
 
 extension  CategoryViewController: NewCategoryDelegate {
