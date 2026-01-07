@@ -25,7 +25,7 @@ final class StatisticsViewController: UIViewController {
         let descriptionLabel = UILabel()
         descriptionLabel.text = "Статистика"
         descriptionLabel.font = .systemFont(ofSize: 34, weight: .bold)
-        descriptionLabel.textColor = .label
+        descriptionLabel.textColor = .ypBlack
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         return descriptionLabel
     }()
@@ -50,6 +50,7 @@ final class StatisticsViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
+        tableView.backgroundColor = .ypWhite
         tableView.register(StatisticsCell.self, forCellReuseIdentifier: StatisticsCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
@@ -64,15 +65,17 @@ final class StatisticsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tabBarItem.title = "Статистика"
+        view.backgroundColor = .ypWhite
         addSubViews()
         addConstraints()
         calculateStatistics()
+        showStatisticOrError()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         calculateStatistics()
+        showStatisticOrError()
     }
     
     private func addSubViews() {
@@ -84,7 +87,7 @@ final class StatisticsViewController: UIViewController {
     
     private func addConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 44),
+            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 88),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
@@ -94,7 +97,7 @@ final class StatisticsViewController: UIViewController {
             errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 162),
+            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 77),
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)

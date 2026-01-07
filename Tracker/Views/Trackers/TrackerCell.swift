@@ -27,7 +27,7 @@ final class TrackerCell: UICollectionViewCell {
     private var indexPath: IndexPath?
     private var blurEffectView: UIVisualEffectView?
     private var isCompletedToday = false
-    private let doneImage = UIImage(named: "Done")
+    private let doneImage = UIImage(named: "Done")?.withRenderingMode(.alwaysTemplate)
     private let plusImage = UIImage(named: "Plus")
     
     var  topContainerView: UIView = {
@@ -48,6 +48,7 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypWhite
+        label.overrideUserInterfaceStyle = .light
         label.textAlignment = .left
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -57,6 +58,7 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var emojiView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypWhite.withAlphaComponent(0.3)
+        view.overrideUserInterfaceStyle = .light
         view.clipsToBounds = true
         view.layer.cornerRadius = 24 / 2
         view.layer.masksToBounds = true

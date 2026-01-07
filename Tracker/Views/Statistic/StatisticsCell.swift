@@ -46,7 +46,7 @@ final class StatisticsCell: UITableViewCell {
     
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = .clear
+        backgroundColor = .ypWhite
         
         contentView.addSubview(countLabel)
         contentView.addSubview(descriptionLabel)
