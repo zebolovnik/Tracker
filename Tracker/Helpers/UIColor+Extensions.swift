@@ -37,7 +37,6 @@ extension UIColor {
     static var colorSelected18: UIColor { UIColor(named: "Color selection 18") ?? UIColor.green }
 }
 
-import UIKit
 
 let colorDictionary: [String: UIColor] = [
     "Tr Black": .ypBlack,

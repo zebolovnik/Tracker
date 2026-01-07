@@ -8,7 +8,7 @@
 import UIKit
 
 protocol FiltersViewControllerDelegate: AnyObject {
-    func didSelectFilter(selectFilter: TrackerFilter)
+    func didSelectFilter(selectFilter: TrackerFilterType)
 }
 
 final class FiltersViewController: UIViewController {
@@ -17,8 +17,8 @@ final class FiltersViewController: UIViewController {
     
     private var appSettingsStore = AppSettingsStore()
     
-    private var filterList: [TrackerFilter] = TrackerFilter.allCases
-    private var selectedFilter: TrackerFilter?
+    private var filterList: [TrackerFilterType] = TrackerFilterType.allCases
+    private var selectedFilter: TrackerFilterType?
 
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -53,7 +53,7 @@ final class FiltersViewController: UIViewController {
         if let savedFilter = appSettingsStore.selectedFilter {
             selectedFilter = savedFilter
         } else {
-            selectedFilter = filterList.first 
+            selectedFilter = filterList.first
         }
         tableView.reloadData()
     }

@@ -36,7 +36,6 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         if let record = try fetchRecord(id: id, date: date) {
             self.context.delete(record)
             self.saveContext()
-            print("Удалена запись трекера \(id) за \(date)")
         }
     }
     
@@ -64,7 +63,6 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             let newRecord = TrackerRecordCoreData(context: context)
             newRecord.id = id
             newRecord.date = dateWithoutTime
-            print("Записано, что трекер \(id) выполнен \(dateWithoutTime)")
         }
         saveContext()
     }
