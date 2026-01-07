@@ -1,14 +1,14 @@
 //
-//  CategoryCell.swift
+//  FiltersCell.swift
 //  Tracker
 //
-//  Created by Nikolay Zebolov on 05.01.2026.
+//  Created by Nikolay Zebolov on 07.01.2026.
 //
 
 import UIKit
 
-final class CategoryCell: UITableViewCell {
-    static let identifier = "CategoryCell"
+final class FiltersCell: UITableViewCell {
+    static let identifier = "FiltersCell"
     
     private let checkmarkImageView: UIImageView = {
         let imageView = UIImageView()
@@ -19,6 +19,13 @@ final class CategoryCell: UITableViewCell {
         return imageView
     }()
     
+    let separatorImageView: UIView = {
+        let separator = UIView()
+        separator.backgroundColor = .ypGray
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        return separator
+    }()
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -39,12 +46,18 @@ final class CategoryCell: UITableViewCell {
         selectionStyle = .none
         
         contentView.addSubview(checkmarkImageView)
+        contentView.addSubview(separatorImageView)
         
         NSLayoutConstraint.activate([
             checkmarkImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             checkmarkImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             checkmarkImageView.widthAnchor.constraint(equalToConstant: 24),
-            checkmarkImageView.heightAnchor.constraint(equalToConstant: 24)
+            checkmarkImageView.heightAnchor.constraint(equalToConstant: 24),
+            
+            separatorImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            separatorImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            separatorImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            separatorImageView.heightAnchor.constraint(equalToConstant: 0.5)
         ])
     }
     
@@ -52,4 +65,8 @@ final class CategoryCell: UITableViewCell {
         textLabel?.text = text
         checkmarkImageView.isHidden = !isSelected
     }
+    
+    func setSeparatorVisibility(isHidden: Bool) {
+         separatorImageView.isHidden = isHidden
+     }
 }

@@ -38,9 +38,8 @@ final class ColorCell: UICollectionViewCell {
         ])
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        fatalError("init(coder:) has not been implemented")
     }
     
     func configure(with color: UIColor, isSelected: Bool) {

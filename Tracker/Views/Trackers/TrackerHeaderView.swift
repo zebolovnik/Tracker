@@ -10,7 +10,7 @@ import UIKit
 final class TrackerHeaderView: UICollectionReusableView {
     
     static let switchHeaderIdentifier = String(describing: TrackerHeaderView.self)
-    
+
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 19, weight: .bold)
@@ -25,10 +25,10 @@ final class TrackerHeaderView: UICollectionReusableView {
         addSubview(titleLabel)
         addConstraints()
     }
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        fatalError("init(coder:) has not been implemented")
     }
+    
     private func addConstraints() {
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 28),

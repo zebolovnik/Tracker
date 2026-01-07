@@ -23,4 +23,14 @@ final class AppSettingsStore {
             userDefaults.set(newValue, forKey: "hasSeenOnboarding")
         }
     }
+
+    var selectedFilter: TrackerFilter? {
+        get {
+            guard let rawValue = userDefaults.string(forKey: "selectedFilter") else { return nil }
+            return TrackerFilter(rawValue: rawValue)
+        }
+        set {
+            userDefaults.set(newValue?.rawValue, forKey: "selectedFilter")
+        }
+    }
 }

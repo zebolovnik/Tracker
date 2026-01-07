@@ -18,9 +18,14 @@ final class TrackerCell: UICollectionViewCell {
     
     var currentDate: Date?
     var trackerId: UUID?
+    var isPinned: Bool = false {
+        didSet {
+            updatePinVisibility(shouldShowPin: isPinned)
+        }
+    }
     
     private var indexPath: IndexPath?
-    
+    private var blurEffectView: UIVisualEffectView?
     private var isCompletedToday = false
     private let doneImage = UIImage(named: "Done")
     private let plusImage = UIImage(named: "Plus")
@@ -59,6 +64,15 @@ final class TrackerCell: UICollectionViewCell {
         return view
     }()
     
+    private let pin: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "Pin")
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
+    }()
+    
     var emoji: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
@@ -76,7 +90,7 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    private lazy var actionButton: UIButton = {
+    var  actionButton: UIButton = {
         let button = UIButton()
         let buttonSize = 34
         button.layer.cornerRadius = 34 / 2
@@ -93,9 +107,68 @@ final class TrackerCell: UICollectionViewCell {
         addConstraints()
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        super.init(coder: coder)
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
+        self.trackerId = tracker.id
+        self.isCompletedToday = isCompletedToday
+        self.indexPath = indexPath
+        
+        self.contentView.backgroundColor = .ypWhite
+        self.topContainerView.backgroundColor = tracker.color
+        
+        self.emoji.text = tracker.emoji
+        self.titleLabel.text = tracker.name
+        
+        let wordDay = dayWord(for: completedDay)
+        dayNumberView.text = "\(completedDay) \(wordDay)"
+        
+        if isCompletedToday {
+            actionButton.tintColor = .ypWhite
+            actionButton.backgroundColor = tracker.color
+            actionButton.alpha = 0.3
+        } else {
+            actionButton.tintColor = tracker.color
+            actionButton.backgroundColor = .ypWhite
+            actionButton.alpha = 1
+        }
+        
+        let image = isCompletedToday ? doneImage : plusImage
+        actionButton.setImage(image, for: .normal)
+        if actionButton.image(for: .normal) == nil {
+            print("Изображение не установлено для кнопки!")
+        }
+    }
+    
+    func configure(with title: String, date: Date, isPinned: Bool) {
+        titleLabel.text = title
+        self.currentDate = date
+        self.isPinned = isPinned
+    }
+    
+    func dayWord(for number: Int) -> String {
+        let lastDigit = number % 10
+        let lastTwoDigits = number % 100
+        
+        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
+            return "дней"
+        }
+        
+        switch lastDigit {
+        case 1:
+            return "день"
+        case 2, 3, 4:
+            return "дня"
+        default:
+            return "дней"
+        }
+    }
+    
+    func updatePinVisibility(shouldShowPin: Bool) {
+        pin.isHidden = !shouldShowPin
     }
     
     private func addSubview() {
@@ -105,6 +178,7 @@ final class TrackerCell: UICollectionViewCell {
         topContainerView.addSubview(emojiView)
         topContainerView.addSubview(emoji)
         topContainerView.addSubview(titleLabel)
+        topContainerView.addSubview(pin)
         
         bottomContainerView.addSubview(actionButton)
         bottomContainerView.addSubview(dayNumberView)
@@ -130,6 +204,9 @@ final class TrackerCell: UICollectionViewCell {
             emoji.centerXAnchor.constraint(equalTo: emojiView.centerXAnchor),
             emoji.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
             
+            pin.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
+            pin.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            
             titleLabel.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
             titleLabel.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -12),
@@ -142,54 +219,6 @@ final class TrackerCell: UICollectionViewCell {
             actionButton.widthAnchor.constraint(equalToConstant: 34),
             actionButton.heightAnchor.constraint(equalToConstant: 34)
         ])
-    }
-    
-    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
-        self.trackerId = tracker.id
-        self.isCompletedToday = isCompletedToday
-        self.indexPath = indexPath
-        
-        self.contentView.backgroundColor = .ypWhite
-        self.topContainerView.backgroundColor = tracker.color
-        
-        self.emoji.text = tracker.emoji
-        self.titleLabel.text = tracker.name
-        
-        let wordDay = dayWord(for: completedDay)
-        dayNumberView.text = "\(completedDay) \(wordDay)"
-        
-        actionButton.tintColor = isCompletedToday ? .ypWhite : tracker.color
-        actionButton.backgroundColor = isCompletedToday ? tracker.color : .ypWhite
-        actionButton.alpha = isCompletedToday ? 0.3 : 1
-        
-        let image = isCompletedToday ? doneImage : plusImage
-        actionButton.setImage(image, for: .normal)
-        if actionButton.image(for: .normal) == nil {
-            print("Изображение не установлено для кнопки!")
-        }
-    }
-    
-    func configure(with title: String, date: Date) {
-        titleLabel.text = title
-        self.currentDate = date
-    }
-    
-    func dayWord(for number: Int) -> String {
-        let lastDigit = number % 10
-        let lastTwoDigits = number % 100
-        
-        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
-            return "дней"
-        }
-        
-        switch lastDigit {
-        case 1:
-            return "день"
-        case 2, 3, 4:
-            return "дня"
-        default:
-            return "дней"
-        }
     }
     
     @objc private func buttonTapped() {

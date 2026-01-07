@@ -37,9 +37,8 @@ final class EmojiCell: UICollectionViewCell {
         ])
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        fatalError("init(coder:) has not been implemented")
     }
     
     func configure(with emoji: String, isSelected: Bool) {

@@ -33,9 +33,8 @@ final class CollectionHeaderView: UICollectionReusableView {
         ])
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        fatalError("init(coder:) has not been implemented")
     }
     
     func configure(with text: String) {

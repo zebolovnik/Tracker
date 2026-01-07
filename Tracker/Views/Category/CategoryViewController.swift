@@ -22,9 +22,8 @@ final class CategoryViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        nil
+        fatalError("init(coder:) has not been implemented")
     }
     
     private lazy var titleLabel: UILabel = {
@@ -46,7 +45,7 @@ final class CategoryViewController: UIViewController {
     
     private lazy var placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно\nобъединить по смыслу"
+        label.text = "Привычки и события можно объединить по смыслу"
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
         label.numberOfLines = 2
@@ -104,6 +103,7 @@ final class CategoryViewController: UIViewController {
     private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
+        titleLabel.sizeToFit()
     }
     
     private func addSubViews() {
@@ -116,8 +116,6 @@ final class CategoryViewController: UIViewController {
     
     private func addConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
             placeholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
