@@ -25,13 +25,13 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         super.init()
         setupFetchedResultsController()
     }
-
+    
     func fetchAllRecords() throws -> [TrackerRecord] {
         let fetchRequest: NSFetchRequest<TrackerRecordCoreData> = TrackerRecordCoreData.fetchRequest()
         let result = try context.fetch(fetchRequest)
         return result.map { convertToTrackerRecord(from: $0) }
     }
-
+    
     func deleteRecord(id: UUID, date: Date) throws {
         if let record = try fetchRecord(id: id, date: date) {
             self.context.delete(record)
@@ -93,12 +93,12 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         
         fetchRequest.predicate = NSPredicate(format: "id == %@ AND date == %@", id as CVarArg, startOfDay as CVarArg)
         do {
-             let result = try context.fetch(fetchRequest)
-             return result.first
-         } catch {
-             print("Ошибка при получении записи для трекера: \(error)")
-             throw error
-         }
+            let result = try context.fetch(fetchRequest)
+            return result.first
+        } catch {
+            print("Ошибка при получении записи для трекера: \(error)")
+            throw error
+        }
     }
     
     private func convertToTrackerRecord(from coreDataEntity: TrackerRecordCoreData) -> TrackerRecord {
@@ -115,7 +115,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             sectionNameKeyPath: nil,
             cacheName: nil
         )
-
+        
         controller.delegate = self
         self.fetchedResultsController = controller
         

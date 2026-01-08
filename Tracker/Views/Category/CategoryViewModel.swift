@@ -63,12 +63,12 @@ final class CategoryViewModel {
         guard index < categories.count else { return }
         let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-
+        
         let oldTitle = categories[index]
         categories[index] = trimmed
         onCategoriesUpdated?(categories)
     }
-
+    
     private func loadCategories() {
         do {
             let storedCategories = try categoryStore.fetchAllCategories()

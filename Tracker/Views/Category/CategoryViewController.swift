@@ -12,13 +12,13 @@ protocol CategoryViewControllerDelegate: AnyObject {
 }
 
 final class CategoryViewController: UIViewController {
-
+    
     // MARK: - Properties
     weak var delegate: CategoryViewControllerDelegate?
     private let categoryViewModel: CategoryViewModel
-
+    
     // MARK: - UI
-
+    
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.backgroundColor = .ypBackground
@@ -28,13 +28,13 @@ final class CategoryViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
-
+    
     private lazy var placeholderImage: UIImageView = {
         let imageView = UIImageView(image: UIImage(named: "Error"))
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
-
+    
     private lazy var placeholderLabel: UILabel = {
         let label = UILabel()
         label.text = "Привычки и события можно\nобъединить по смыслу"
@@ -45,7 +45,7 @@ final class CategoryViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-
+    
     private lazy var addButton: UIButton = {
         let button = UIButton()
         button.setTitle("Добавить категорию", for: .normal)
@@ -57,30 +57,30 @@ final class CategoryViewController: UIViewController {
         button.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
         return button
     }()
-
+    
     // MARK: - Init
-
+    
     init(categoryViewModel: CategoryViewModel) {
         self.categoryViewModel = categoryViewModel
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
     }
-
+    
     // MARK: - Lifecycle
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
         bindViewModel()
     }
-
+    
     // MARK: - Setup
-
+    
     private func setupUI() {
         view.backgroundColor = .ypWhite
         navigationItem.title = "Категория"
@@ -88,55 +88,55 @@ final class CategoryViewController: UIViewController {
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
         ]
-
+        
         tableView.delegate = self
         tableView.dataSource = self
-
+        
         view.addSubview(tableView)
         view.addSubview(placeholderImage)
         view.addSubview(placeholderLabel)
         view.addSubview(addButton)
-
+        
         updatePlaceholderVisibility()
     }
-
+    
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -16),
-
+            
             placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             placeholderImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 232),
-
+            
             placeholderLabel.topAnchor.constraint(equalTo: placeholderImage.bottomAnchor, constant: 8),
             placeholderLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             placeholderLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-
+            
             addButton.heightAnchor.constraint(equalToConstant: 60),
             addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             addButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
         ])
     }
-
+    
     private func bindViewModel() {
         categoryViewModel.onCategoriesUpdated = { [weak self] _ in
             self?.tableView.reloadData()
             self?.updatePlaceholderVisibility()
         }
     }
-
+    
     private func updatePlaceholderVisibility() {
         let hasCategories = !categoryViewModel.getCategories().isEmpty
         tableView.isHidden = !hasCategories
         placeholderImage.isHidden = hasCategories
         placeholderLabel.isHidden = hasCategories
     }
-
+    
     // MARK: - Actions
-
+    
     @objc private func addButtonTapped() {
         let vc = NewCategoryViewController()
         vc.delegate = self
@@ -149,29 +149,29 @@ final class CategoryViewController: UIViewController {
 // MARK: - UITableViewDataSource
 
 extension CategoryViewController: UITableViewDataSource {
-
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         categoryViewModel.getCategories().count
     }
-
+    
     func tableView(
         _ tableView: UITableView,
         cellForRowAt indexPath: IndexPath
     ) -> UITableViewCell {
-
+        
         guard let cell = tableView.dequeueReusableCell(
             withIdentifier: CategoryCell.identifier,
             for: indexPath
         ) as? CategoryCell else {
             return UITableViewCell()
         }
-
+        
         let title = categoryViewModel.getCategories()[indexPath.row]
         let isSelected = categoryViewModel.isCategorySelected(title)
-
+        
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == categoryViewModel.getCategories().count - 1
-
+        
         cell.configure(with: title, isSelected: isSelected)
         return cell
     }
@@ -180,7 +180,7 @@ extension CategoryViewController: UITableViewDataSource {
 // MARK: - UITableViewDelegate
 
 extension CategoryViewController: UITableViewDelegate {
-
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let category = categoryViewModel.getCategories()[indexPath.row]
         categoryViewModel.selectCategory(category)
@@ -188,25 +188,25 @@ extension CategoryViewController: UITableViewDelegate {
         tableView.reloadData()
         navigationController?.popViewController(animated: true)
     }
-
+    
     func tableView(
         _ tableView: UITableView,
         contextMenuConfigurationForRowAt indexPath: IndexPath,
         point: CGPoint
     ) -> UIContextMenuConfiguration? {
-
+        
         let category = categoryViewModel.getCategories()[indexPath.row]
-
+        
         let editAction = UIAction(title: "Редактировать") { _ in
             let editVC = NewCategoryViewController()
             editVC.initialTitle = category
             editVC.delegate = self
-
+            
             let nav = UINavigationController(rootViewController: editVC)
             nav.modalPresentationStyle = .pageSheet
             self.present(nav, animated: true)
         }
-
+        
         let deleteAction = UIAction(
             title: "Удалить",
             attributes: .destructive
@@ -216,20 +216,20 @@ extension CategoryViewController: UITableViewDelegate {
                 message: nil,
                 preferredStyle: .actionSheet
             )
-
+            
             let confirmAction = UIAlertAction(title: "Удалить", style: .destructive) { _ in
                 self.categoryViewModel.deleteCategory(category)
                 tableView.reloadData()
             }
-
+            
             let cancelAction = UIAlertAction(title: "Отменить", style: .cancel)
-
+            
             alert.addAction(confirmAction)
             alert.addAction(cancelAction)
-
+            
             self.present(alert, animated: true)
         }
-
+        
         return UIContextMenuConfiguration(
             identifier: nil,
             previewProvider: nil
@@ -248,14 +248,14 @@ extension CategoryViewController: UITableViewDelegate {
 extension CategoryViewController: NewCategoryDelegate {
     func addNewCategory(newCategory: String) {
         let categories = categoryViewModel.getCategories()
-
+        
         if let selected = categories.first,
            categoryViewModel.isCategorySelected(selected) {
             categoryViewModel.updateCategory(at: 0, newTitle: newCategory)
         } else {
             categoryViewModel.addCategory(newCategory)
         }
-
+        
         tableView.reloadData()
     }
 }

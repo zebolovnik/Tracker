@@ -39,7 +39,7 @@ final class OnboardingViewController: UIPageViewController {
     
     private func finishOnboarding() {
         UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-
+        
         if let window = view.window {
             let tabBarController = TabBarViewController()
             window.rootViewController = tabBarController

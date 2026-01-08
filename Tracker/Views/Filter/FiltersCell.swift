@@ -25,7 +25,7 @@ final class FiltersCell: UITableViewCell {
         separator.translatesAutoresizingMaskIntoConstraints = false
         return separator
     }()
-
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -68,6 +68,6 @@ final class FiltersCell: UITableViewCell {
     }
     
     func setSeparatorVisibility(isHidden: Bool) {
-         separatorImageView.isHidden = isHidden
-     }
+        separatorImageView.isHidden = isHidden
+    }
 }

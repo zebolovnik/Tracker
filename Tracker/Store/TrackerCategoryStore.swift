@@ -49,11 +49,11 @@ final class TrackerCategoryStore: NSObject {
     func setDelegate(_ delegate: TrackerCategoryStoreDelegate) {
         self.delegate = delegate
     }
-
+    
     func fetchAllCategories() throws -> [TrackerCategory] {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         let result = try context.fetch(fetchRequest)
-
+        
         return result.compactMap { trackerCategoryCoreData in
             do {
                 return try getCategories(from: trackerCategoryCoreData)
@@ -135,7 +135,7 @@ final class TrackerCategoryStore: NSObject {
         } else {
             color = .colorSelected17
         }
-
+        
         let emoji = trackerCoreData.emoji ?? ""
         var schedule: [WeekDay] = []
         if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {

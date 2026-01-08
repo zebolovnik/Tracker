@@ -50,13 +50,13 @@ final class StatisticsCell: UITableViewCell {
         
         contentView.addSubview(countLabel)
         contentView.addSubview(descriptionLabel)
-
+        
         NSLayoutConstraint.activate([
             countLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
             countLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
             countLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
             countLabel.heightAnchor.constraint(equalToConstant: 41),
-
+            
             descriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
             descriptionLabel.topAnchor.constraint(equalTo: countLabel.bottomAnchor, constant: 7),
             descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
@@ -85,7 +85,7 @@ final class StatisticsCell: UITableViewCell {
             width: contentView.bounds.width,
             height: contentView.bounds.height - 12
         )
-
+        
         let shapeLayer = CAShapeLayer()
         shapeLayer.lineWidth = 1
         shapeLayer.fillColor = UIColor.clear.cgColor

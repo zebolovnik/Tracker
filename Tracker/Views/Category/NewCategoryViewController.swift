@@ -64,11 +64,11 @@ final class NewCategoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
-
+        
         setupNavigationBar()
         addSubViews()
         addConstraints()
-
+        
         if let initialTitle {
             titleLabel.text = "Редактирование категории"
             categoryNameInput.text = initialTitle
@@ -113,14 +113,14 @@ final class NewCategoryViewController: UIViewController {
     @objc private func categoryButtonTapped() {
         guard let text = categoryNameInput.text?
             .trimmingCharacters(in: .whitespaces),
-            !text.isEmpty else { return }
-
+              !text.isEmpty else { return }
+        
         if let onSave {
             onSave(text)
         } else {
             delegate?.addNewCategory(newCategory: text)
         }
-
+        
         dismiss(animated: true)
     }
 }

@@ -143,7 +143,7 @@ extension ScheduleViewController: UITableViewDataSource {
         switchControl.tintColor = .ypBlue
         switchControl.onTintColor = .ypBlue
         cell.accessoryView = switchControl
-
+        
         let separatorImageView = UIView()
         separatorImageView.backgroundColor = .ypGray
         separatorImageView.translatesAutoresizingMaskIntoConstraints = false

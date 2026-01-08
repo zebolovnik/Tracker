@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2E0D13822F10767A005D792F /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 2E0D13812F10767A005D792F /* SnapshotTesting */; };
 		2E84AB132F1004BE00E2C9B9 /* AppMetricaCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2E84AB122F1004BE00E2C9B9 /* AppMetricaCore */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2E84AB132F1004BE00E2C9B9 /* AppMetricaCore in Frameworks */,
+				2E0D13822F10767A005D792F /* SnapshotTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -675,6 +677,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2E0D13812F10767A005D792F /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2EF38DE52F0E9E34001454F4 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
+		};
 		2E84AB122F1004BE00E2C9B9 /* AppMetricaCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2E84AB112F1004BE00E2C9B9 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */;

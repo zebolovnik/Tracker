@@ -126,7 +126,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         
         return collectionView
     }()
-
+    
     private func createCollectionViewLayout() -> UICollectionViewFlowLayout {
         let layout = UICollectionViewFlowLayout()
         layout.sectionInset = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
@@ -197,7 +197,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         trackerItems.reloadData()
         updateLayoutForCompletedDay()
     }
-
+    
     func didUpdateSchedule(_ schedule: [WeekDay?]) {
         self.schedule = schedule
         validateCreateButtonState()
@@ -281,10 +281,10 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         }
         trackerNameInputTopConstraint.isActive = true
         UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut]) {
-                self.view.layoutIfNeeded()
-            }
+            self.view.layoutIfNeeded()
+        }
     }
-
+    
     private func updateTrackerItemsConstraint() {
         trackerItemsTopConstraint.isActive = false
         trackerItemsTopConstraint = trackerItems.topAnchor.constraint(

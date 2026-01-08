@@ -19,7 +19,7 @@ final class FiltersViewController: UIViewController {
     
     private var filterList: [TrackerFilterType] = TrackerFilterType.allCases
     private var selectedFilter: TrackerFilterType?
-
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
@@ -116,7 +116,7 @@ extension FiltersViewController: UITableViewDelegate, UITableViewDataSource {
             indexPathsToReload.append(IndexPath(row: previousIndex, section: 0))
         }
         tableView.reloadRows(at: indexPathsToReload, with: .automatic)
-
+        
         delegate?.didSelectFilter(selectFilter: newSelectedFilter)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.dismiss(animated: true, completion: nil)
