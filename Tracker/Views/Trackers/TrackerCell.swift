@@ -97,7 +97,7 @@ final class TrackerCell: UICollectionViewCell {
         button.alpha = 1
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
+        button.addTarget(TrackerCell.self, action: #selector(buttonTapped), for: .touchUpInside)
         return button
     }()
     
