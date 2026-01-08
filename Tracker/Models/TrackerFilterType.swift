@@ -1,5 +1,5 @@
 //
-//  TrackerFilter.swift
+//  TrackerFilterType.swift
 //  Tracker
 //
 //  Created by Nikolay Zebolov on 07.01.2026.
