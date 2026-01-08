@@ -13,3 +13,4 @@ enum StatisticsType: String, CaseIterable {
     case totalCompleted = "Трекеров завершено"
     case averageCompleted = "Среднее значение"
 }
+

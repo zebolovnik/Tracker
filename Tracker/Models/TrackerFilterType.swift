@@ -12,8 +12,4 @@ enum TrackerFilterType: String, CaseIterable {
     case trackersToday = "Трекеры на сегодня"
     case completed = "Завершённые"
     case notCompleted = "Незавершённые"
-    
-    static func from(rawValue: String) -> TrackerFilterType? {
-        return TrackerFilterType(rawValue: rawValue)
-    }
 }

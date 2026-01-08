@@ -125,7 +125,7 @@ final class TrackerCell: UICollectionViewCell {
         self.emoji.text = tracker.emoji
         self.titleLabel.text = tracker.name
         
-        let wordDay = dayWord(for: completedDay)
+        let wordDay = TrackerCell.dayWord(for: completedDay)
         dayNumberView.text = "\(completedDay) \(wordDay)"
         
         if isCompletedToday {
@@ -151,21 +151,21 @@ final class TrackerCell: UICollectionViewCell {
         self.isPinned = isPinned
     }
     
-    func dayWord(for number: Int) -> String {
+    static func dayWord(for number: Int) -> String {
         let lastDigit = number % 10
         let lastTwoDigits = number % 100
         
         if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
-            return "дней"
+            return "manyDays".localized
         }
         
         switch lastDigit {
         case 1:
-            return "день"
+            return "oneDay".localized
         case 2, 3, 4:
-            return "дня"
+            return "fewDays".localized
         default:
-            return "дней"
+            return "manyDays".localized
         }
     }
     
@@ -232,5 +232,6 @@ final class TrackerCell: UICollectionViewCell {
         } else {
             delegate?.completeTracker(id: trackerId, at: indexPath)
         }
+        AnalyticsService.tapTrack()
     }
 }
