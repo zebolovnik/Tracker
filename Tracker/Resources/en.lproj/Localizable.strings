@@ -17,3 +17,7 @@
 "manyDays" = "days";
 
 "days_count" = "%d days";
+
+"statistics.title" = "Statistics";
+"statistics.completed" = "Trackers completed";
+"statistics.empty" = "Nothing to analyze yet";

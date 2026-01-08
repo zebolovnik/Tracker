@@ -225,7 +225,6 @@ final class TrackersViewController: UIViewController {
     }
     
     private func addSubViews() {
-        view.addSubview(descriptionLabel)
         view.addSubview(errorImage)
         view.addSubview(errorLabel)
         view.addSubview(errorSearchImage)
@@ -238,41 +237,44 @@ final class TrackersViewController: UIViewController {
     
     private func addConstraints() {
         NSLayoutConstraint.activate([
-            descriptionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
-            descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            descriptionLabel.heightAnchor.constraint(equalToConstant: 41),
-            
             errorImage.topAnchor.constraint(equalTo: view.topAnchor, constant: 402),
             errorImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
             errorLabel.topAnchor.constraint(equalTo: errorImage.bottomAnchor, constant: 8),
             errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
+
             errorSearchImage.topAnchor.constraint(equalTo: view.topAnchor, constant: 402),
             errorSearchImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            errorSearchLabel.topAnchor.constraint(equalTo: errorImage.bottomAnchor, constant: 8),
+
+            errorSearchLabel.topAnchor.constraint(equalTo: errorSearchImage.bottomAnchor, constant: 8),
             errorSearchLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             errorSearchLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            collectionView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 10),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            
+            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+
             filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             filterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             filterButton.widthAnchor.constraint(equalToConstant: 114),
-            filterButton.heightAnchor.constraint(equalToConstant: 50)
+            filterButton.heightAnchor.constraint(equalToConstant: 50),
+
         ])
     }
     
     private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: false)
-        guard (navigationController?.navigationBar) != nil else { return }
+        guard navigationController?.navigationBar != nil else { return }
+
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
-        
-        navigationItem.title = "Трекеры"
+
+        navigationItem.title = NSLocalizedString(
+            "trackers.title",
+            comment: "Trackers screen title"
+        )
         navigationController?.navigationBar.prefersLargeTitles = true
     }
     
@@ -298,6 +300,10 @@ final class TrackersViewController: UIViewController {
     
     @objc private func datePickerChanged() {
         currentDate = Calendar.current.startOfDay(for: datePicker.date)
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yy"
+
         updateVisibleCategories()
     }
     
@@ -305,37 +311,54 @@ final class TrackersViewController: UIViewController {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
-        
+
         loadCategories()
-        var newVisibleCategories: [TrackerCategory] = []
-        
-        let pinnedTrackersList = trackerStore.fetchPinnedTrackers()
-        if !pinnedTrackersList.isEmpty {
-            newVisibleCategories.append(TrackerCategory(title: "Закрепленные", trackers: pinnedTrackersList))
+
+        var result: [TrackerCategory] = []
+
+        let pinnedTrackers = categories
+            .flatMap { $0.trackers }
+            .filter { trackerStore.isTrackerPinned(id: $0.id) }
+
+        if !pinnedTrackers.isEmpty {
+            result.append(
+                TrackerCategory(title: "Закрепленные", trackers: pinnedTrackers)
+            )
         }
-        let filteredCategories: [TrackerCategory] = categories.compactMap { category in
-            let filteredTrackers = category.trackers.filter { tracker in
-                if pinnedTrackersList.contains(where: { $0.id == tracker.id }) {
+
+        let normalCategories: [TrackerCategory] = categories.compactMap { category in
+            let trackers = category.trackers.filter { tracker in
+                if trackerStore.isTrackerPinned(id: tracker.id) {
                     return false
                 }
-                if tracker.schedule.isEmpty || tracker.schedule.contains(selectedWeekDay) {
-                    // CHANGE: Фильтрация по поиску
-                    if !searchText.isEmpty {
-                        if !tracker.name.lowercased().contains(searchText.lowercased()) {
-                            return false
-                        }
-                    }
-                    if let showCompleted = showOnlyCompleted {
-                        return (try? trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)) == showCompleted
-                    }
-                    return true
+
+                if !tracker.schedule.isEmpty && !tracker.schedule.contains(selectedWeekDay) {
+                    return false
                 }
-                return false
+
+                if !searchText.isEmpty &&
+                    !tracker.name.lowercased().contains(searchText.lowercased()) {
+                    return false
+                }
+
+                if let showCompleted = showOnlyCompleted {
+                    return (try? trackerRecordStore.isRecordExists(
+                        id: tracker.id,
+                        date: currentDate
+                    )) == showCompleted
+                }
+
+                return true
             }
-            return filteredTrackers.isEmpty ? nil : TrackerCategory(title: category.title, trackers: filteredTrackers)
+
+            return trackers.isEmpty
+                ? nil
+                : TrackerCategory(title: category.title, trackers: trackers)
         }
-        newVisibleCategories.append(contentsOf: filteredCategories)
-        visibleCategories = newVisibleCategories
+
+        result.append(contentsOf: normalCategories)
+
+        visibleCategories = result
         updateErrorImageVisibility()
         updateFilterButtonState()
         collectionView.reloadData()

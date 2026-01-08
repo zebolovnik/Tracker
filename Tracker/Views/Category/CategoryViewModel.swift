@@ -58,11 +58,23 @@ final class CategoryViewModel {
             onError?("CategoryViewModel - Ошибка удаления категории: \(error)")
         }
     }
+    
+    func updateCategory(at index: Int, newTitle: String) {
+        guard index < categories.count else { return }
+        let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+
+        let oldTitle = categories[index]
+        categories[index] = trimmed
+        onCategoriesUpdated?(categories)
+    }
 
     private func loadCategories() {
         do {
             let storedCategories = try categoryStore.fetchAllCategories()
-            categories = storedCategories.map { $0.title }
+            categories = storedCategories
+                .map { $0.title }
+                .filter { $0.lowercased() != "закрепленные" }
         } catch {
             print("CategoryViewModel - Ошибка загрузки категорий: \(error)")
         }

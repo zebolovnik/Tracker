@@ -13,7 +13,12 @@ protocol NewCategoryDelegate: AnyObject {
 
 final class NewCategoryViewController: UIViewController {
     
+    var initialTitle: String?
+    var isEditingCategory: Bool = false
+    
     weak var delegate: NewCategoryDelegate?
+    
+    var onSave: ((String) -> Void)?
     
     private var previousText: String?
     
@@ -59,9 +64,16 @@ final class NewCategoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
+
         setupNavigationBar()
         addSubViews()
         addConstraints()
+
+        if let initialTitle {
+            titleLabel.text = "Редактирование категории"
+            categoryNameInput.text = initialTitle
+            validateCategoryButton()
+        }
     }
     
     private func addSubViews() {
@@ -99,9 +111,17 @@ final class NewCategoryViewController: UIViewController {
     }
     
     @objc private func categoryButtonTapped() {
-        guard let categoryName = categoryNameInput.text?.trimmingCharacters(in: .whitespaces), !categoryName.isEmpty else { return }
-        delegate?.addNewCategory(newCategory: categoryName)
-        dismiss(animated: true, completion: nil)
+        guard let text = categoryNameInput.text?
+            .trimmingCharacters(in: .whitespaces),
+            !text.isEmpty else { return }
+
+        if let onSave {
+            onSave(text)
+        } else {
+            delegate?.addNewCategory(newCategory: text)
+        }
+
+        dismiss(animated: true)
     }
 }
 

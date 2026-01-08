@@ -11,7 +11,6 @@ import CoreData
 final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     private let context: NSManagedObjectContext
     private var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
-    private var pinnedTrackers: Set<UUID> = []
     
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
@@ -64,27 +63,14 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     
     func pinTracker(id: UUID) throws {
         guard let trackerCoreData = try fetchTrackerCoreData(by: id) else { return }
-        if !pinnedTrackers.contains(id) {
-            pinnedTrackers.insert(id)
-            let originalCategory = trackerCoreData.category?.title
-            trackerCoreData.isPinned = true
-            trackerCoreData.originalCategory = originalCategory
-            try updateTrackerCategory(trackerCoreData, categoryTitle: "Закрепленные")
-            saveContext()
-        }
+        trackerCoreData.isPinned = true
+        saveContext()
     }
     
     func unpinTracker(id: UUID) throws {
         guard let trackerCoreData = try fetchTrackerCoreData(by: id) else { return }
-        if pinnedTrackers.contains(id) {
-            pinnedTrackers.remove(id)
-            if let originalCategory = trackerCoreData.originalCategory {
-                try updateTrackerCategory(trackerCoreData, categoryTitle: originalCategory)
-            }
-            trackerCoreData.isPinned = false
-            trackerCoreData.originalCategory = nil
-            saveContext()
-        }
+        trackerCoreData.isPinned = false
+        saveContext()
     }
     
     func fetchPinnedTrackers() -> [Tracker] {

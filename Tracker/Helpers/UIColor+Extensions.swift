@@ -34,6 +34,7 @@ extension UIColor {
     static var colorSelected16: UIColor { UIColor(resource: .color16) }
     static var colorSelected17: UIColor { UIColor(resource: .color17) }
     static var colorSelected18: UIColor { UIColor(resource: .color18) }
+    static var colorSelected19: UIColor { UIColor(resource: .color) }
 }
 
 let colorDictionary: [String: UIColor] = [
@@ -62,5 +63,6 @@ let colorDictionary: [String: UIColor] = [
     "Color15": .colorSelected15,
     "Color16": .colorSelected16,
     "Color17": .colorSelected17,
-    "Color18": .colorSelected18
+    "Color18": .colorSelected18,
+    "Color": .colorSelected19
 ]
