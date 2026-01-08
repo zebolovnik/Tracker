@@ -5,7 +5,6 @@
 //  Created by Nikolay Zebolov on 04.01.2026.
 //
 
-import Foundation
 import UIKit
 
 final class ColorCell: UICollectionViewCell {
@@ -39,8 +38,9 @@ final class ColorCell: UICollectionViewCell {
         ])
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     func configure(with color: UIColor, isSelected: Bool) {

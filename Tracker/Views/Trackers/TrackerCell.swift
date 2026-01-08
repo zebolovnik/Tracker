@@ -5,7 +5,6 @@
 //  Created by Nikolay Zebolov on 03.01.2026.
 //
 
-import Foundation
 import UIKit
 
 protocol TrackerCellDelegate: AnyObject {
@@ -94,9 +93,9 @@ final class TrackerCell: UICollectionViewCell {
         addConstraints()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func addSubview() {

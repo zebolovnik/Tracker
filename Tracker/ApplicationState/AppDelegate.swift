@@ -27,13 +27,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             if let storeURL = storeURL {
                 do {
                     try FileManager.default.removeItem(at: storeURL)
-                    print("Старый persistent store удален.")
+                    Logger.logPrint("Старый persistent store удален.", category: "Data")
                 } catch {
-                    print("Ошибка удаления старого persistent store: \(error)")
+                    Logger.logPrint("Ошибка удаления старого persistent store: \(error)", category: "Error")
                 }
             }
         } else {
-            print("Не удалось найти persistent store.")
+            Logger.logPrint("Не удалось найти persistent store.", category: "Error")
         }
     }
     
@@ -45,9 +45,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
     }
-
+    
     // MARK: - Core Data stack
-
+    
     lazy var persistentContainer: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "DataModel")
         container.loadPersistentStores { _, error in
@@ -57,13 +57,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         return container
     }()
-
+    
     // MARK: - Core Data Saving support
-
+    
     func saveContext() {
         let context = persistentContainer.viewContext
         guard context.hasChanges else { return }
-
+        
         do {
             try context.save()
         } catch {
@@ -72,7 +72,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
         }
     }
-
+    
     func applicationWillTerminate(_ application: UIApplication) {
         saveContext()
     }

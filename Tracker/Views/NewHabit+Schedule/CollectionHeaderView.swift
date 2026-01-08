@@ -5,7 +5,6 @@
 //  Created by Nikolay Zebolov on 04.01.2026.
 //
 
-import Foundation
 import UIKit
 
 final class CollectionHeaderView: UICollectionReusableView {
@@ -34,8 +33,9 @@ final class CollectionHeaderView: UICollectionReusableView {
         ])
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     func configure(with text: String) {

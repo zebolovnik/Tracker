@@ -5,7 +5,6 @@
 //  Created by Nikolay Zebolov on 04.01.2026.
 //
 
-import Foundation
 import UIKit
 import CoreData
 
@@ -43,6 +42,10 @@ final class TrackerCategoryStore: NSObject {
         self.context = context
         super.init()
         setupFetchedResultsController()
+    }
+    
+    func setDelegate(_ delegate: TrackerCategoryStoreDelegate) {
+        self.delegate = delegate
     }
     
     func fetchAllCategories() throws -> [TrackerCategory] {

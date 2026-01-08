@@ -142,7 +142,7 @@ final class TrackersViewController: UIViewController {
         
         trackerCategoryStore.delegate = self
         
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
@@ -183,7 +183,7 @@ final class TrackersViewController: UIViewController {
         ])
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: false)
         guard (navigationController?.navigationBar) != nil else { return }
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
@@ -200,7 +200,7 @@ final class TrackersViewController: UIViewController {
     
     @objc
     private func didTapPlusButton() {
-        print("Кнопка плюс нажата и открывается страница выбора типа трекера")
+        Logger.logPrint("🔘 Tapped + и открывается страница выбора типа трекера", category: "UI")
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -216,21 +216,21 @@ final class TrackersViewController: UIViewController {
     private func updateVisibleCategories() {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
-        print("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)")
+        Logger.logPrint("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)", category: "Data")
         
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
         loadCategories()
         visibleCategories = categories.compactMap { category in
             let trackers = category.trackers.filter { tracker in
-                print("Update Visible Categories: Проверка трекера: \(tracker.name)")
+                Logger.logPrint("Проверка трекера: \(tracker.name)", category: "Data")
                 if tracker.schedule.isEmpty {
-                    print("Update Visible Categories: Трекер без расписания: \(tracker.name)")
+                    Logger.logPrint("Трекер без расписания: \(tracker.name)", category: "Data")
                     return true
                 } else {
                     let containsWeekDay = tracker.schedule.contains { weekDay in
                         weekDay == selectedWeekDay
                     }
-                    print("Update Visible Categories: Трекер содержит \(selectedWeekDay): \(containsWeekDay)")
+                    Logger.logPrint("Трекер содержит \(selectedWeekDay): \(containsWeekDay)", category: "Data")
                     return containsWeekDay
                 }
             }
@@ -255,13 +255,12 @@ extension TrackersViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
-        // TODO сортировка при выборе в поле поиска
     }
 }
 
 extension TrackersViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        print("Количество секций: \(visibleCategories.count)")
+        Logger.logPrint("Количество секций: \(visibleCategories.count)", category: "UI")
         return visibleCategories.count
     }
     
@@ -281,7 +280,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        print("Секция: \(indexPath.section), Элемент: \(indexPath.row)")
+        Logger.logPrint("Секция: \(indexPath.section), Элемент: \(indexPath.row)", category: "UI")
         
         let isCompletedToday = isTrackerCompletedToday(id: tracker.id)
         cell.delegate = self
@@ -290,7 +289,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         cell.configure(with: tracker.name, date: currentDate)
         cell.setupCell(with: tracker, indexPath: indexPath, completedDay: completedDay, isCompletedToday: isCompletedToday)
-        print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
+        Logger.logPrint("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)", category: "UI")
         return cell
     }
     
@@ -303,29 +302,20 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             return false
         }
     }
-    
-//    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-//        do {
-//            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date)
-//        } catch {
-//            print("Ошибка при проверке записи трекера: \(error)")
-//            return false
-//        }
-//    }
 }
 
 extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
         let todayDate = Date()
         guard currentDate <= todayDate else {
-            print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
+            Logger.logPrint("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)", category: "Error")
             return
         }
         do {
             try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
-            print("Выполнен трекер с id \(id) о чем создана запись \(datePicker.date)")
+            Logger.logPrint("Выполнен трекер с id \(id) о чем создана запись \(datePicker.date)", category: "Data")
         } catch {
-            print("Ошибка при обновлении записи в CoreData: \(error)")
+            Logger.logPrint("Ошибка при обновлении записи в CoreData: \(error)", category: "Error")
         }
         collectionView.reloadItems(at: [indexPath])
     }
@@ -333,9 +323,9 @@ extension TrackersViewController: TrackerCellDelegate {
     func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
         do {
             try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
-            print("Отмена выполнения трекера с id \(id) - запись удалена")
+            Logger.logPrint("Отмена выполнения трекера с id \(id) - запись удалена", category: "Data")
         } catch {
-            print("Ошибка при удалении записи из CoreData: \(error)")
+            Logger.logPrint("Ошибка при удалении записи из CoreData: \(error)", category: "Error")
         }
         collectionView.reloadItems(at: [indexPath])
     }

@@ -42,6 +42,7 @@ final class ScheduleViewController: UIViewController {
         return tableView
     }()
     
+    
     private lazy var saveDaysButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
@@ -54,17 +55,18 @@ final class ScheduleViewController: UIViewController {
         return button
     }()
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
         scheduleView.delegate = self
         scheduleView.dataSource = self
-        navigationBar()
+        setupNavigationBar()
         addSubview()
         addConstraints()
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }
