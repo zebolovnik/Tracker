@@ -36,6 +36,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         if let record = try fetchRecord(id: id, date: date) {
             self.context.delete(record)
             self.saveContext()
+            StatisticsService.shared.notifyUpdate()
         }
     }
     
@@ -65,6 +66,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             newRecord.date = dateWithoutTime
         }
         saveContext()
+        StatisticsService.shared.notifyUpdate()
     }
     
     func isRecordExists(id: UUID, date: Date) throws -> Bool {
@@ -75,6 +77,13 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             print("Ошибка при получении записи для трекера: \(error)")
             throw error
         }
+    }
+    
+    func getFinishedTrackersCount() -> Int {
+        let fetchRequest: NSFetchRequest<TrackerRecordCoreData> = TrackerRecordCoreData.fetchRequest()
+        guard let records = try? context.fetch(fetchRequest) else { return 0 }
+        let uniqueTrackerIds = Set(records.compactMap { $0.id })
+        return uniqueTrackerIds.count
     }
     
     private func fetchRecord(id: UUID, date: Date) throws -> TrackerRecordCoreData? {

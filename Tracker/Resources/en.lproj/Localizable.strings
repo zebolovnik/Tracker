@@ -15,3 +15,5 @@
 "oneDay" = "day";
 "fewDays" = "days";
 "manyDays" = "days";
+
+"days_count" = "%d days";

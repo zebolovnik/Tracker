@@ -8,59 +8,65 @@
 import Foundation
 import AppMetricaCore
 
-struct AnalyticsService {
-    
-    static func activate() {
-        guard let configuration = AppMetricaConfiguration(apiKey: "09459db6-51fd-4a01-a7d0-3f45c8ceea98") else { return }
+final class AnalyticsService {
+    static let shared = AnalyticsService()
+
+    private init() {}
+
+    func activate() {
+        guard let configuration = AppMetricaConfiguration(apiKey: "09459db6-51fd-4a01-a7d0-3f45c8ceea98") else {
+            print("ANALYTICS ERROR: Failed to create AppMetrica configuration")
+            return
+        }
         AppMetrica.activate(with: configuration)
     }
 
-    private static func report(event: String, item: String? = nil) {
-        var parameters: [String: Any] = ["screen": "Main"]
-        
-        if let item = item {
-            parameters["item"] = item
-        }
-        print("EVENT: \(event), PARAMETERS: \(parameters)")
-
-        AppMetrica.reportEvent(name: event, parameters: parameters, onFailure: { error in
-            print("FAILED TO REPORT EVENT: \(event)")
-            print("ERROR: \(error.localizedDescription)")
+    func report(event: String, params: [String: Any]) {
+        AppMetrica.reportEvent(name: event, parameters: params, onFailure: { error in
+            print("ANALYTICS ERROR: \(error.localizedDescription)")
         })
     }
- 
-    static func openScreen() {
-        print("Opening Main Screen")
-        report(event: "open")
+
+    enum EventType: String {
+        case open
+        case close
+        case click
     }
- 
-    static func closeScreen() {
-        print("Closing Main Screen")
-        report(event: "close")
+
+    enum Screen: String {
+        case main = "Main"
     }
- 
-    static func tapAddTrack() {
-        print("Tapped 'Add Track' Button")
-        report(event: "click", item: "add_track")
+
+    enum Item: String {
+        case addTrack = "add_track"
+        case track
+        case filter
+        case edit
+        case delete
     }
- 
-    static func tapTrack() {
-        print("Tapped on a Track")
-        report(event: "click", item: "track")
+
+    func reportScreenOpen(_ screen: Screen) {
+        let params: [String: Any] = [
+            "event": EventType.open.rawValue,
+            "screen": screen.rawValue
+        ]
+        report(event: EventType.open.rawValue, params: params)
     }
- 
-    static func tapFilter() {
-        print("Tapped 'Filter' Button")
-        report(event: "click", item: "filter")
+
+    func reportScreenClose(_ screen: Screen) {
+        let params: [String: Any] = [
+            "event": EventType.close.rawValue,
+            "screen": screen.rawValue
+        ]
+        report(event: EventType.close.rawValue, params: params)
     }
- 
-    static func tapEdit() {
-        print("Selected 'Edit' from Context Menu")
-        report(event: "click", item: "edit")
-    }
- 
-    static func tapDelete() {
-        print("Selected 'Delete' from Context Menu")
-        report(event: "click", item: "delete")
+
+    func reportClick(screen: Screen, item: Item) {
+        let params: [String: Any] = [
+            "event": EventType.click.rawValue,
+            "screen": screen.rawValue,
+            "item": item.rawValue
+        ]
+        report(event: EventType.click.rawValue, params: params)
     }
 }

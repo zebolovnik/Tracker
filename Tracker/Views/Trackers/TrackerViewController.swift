@@ -12,6 +12,7 @@ final class TrackersViewController: UIViewController {
     private var appSettingsStore = AppSettingsStore.shared
     private var currentFilter: TrackerFilterType = .allTrackers
     private var showOnlyCompleted: Bool? = nil
+    private var searchText: String = ""
     
     private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
@@ -71,24 +72,17 @@ final class TrackersViewController: UIViewController {
         let descriptionLabel = UILabel()
         descriptionLabel.text = "trackers.title".localized
         descriptionLabel.font = .systemFont(ofSize: 34, weight: .bold)
-        descriptionLabel.textColor = .label
+        descriptionLabel.textColor = .ypBlack
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         return descriptionLabel
     }()
     
-    private lazy var searchTextField: UISearchTextField = {
-        let textField = UISearchTextField()
-        let placeholderAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.ypGray.withAlphaComponent(0.3),
-            .font: UIFont.systemFont(ofSize: 17, weight: .regular)
-        ]
-        textField.attributedPlaceholder = NSAttributedString(string: "Поиск", attributes: placeholderAttributes)
-        textField.backgroundColor = .clear
-        textField.layer.cornerRadius = 10
-        textField.layer.masksToBounds = true
-        textField.delegate = self
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        return textField
+    private var searchController: UISearchController = {
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchBar.placeholder = "Поиск"
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.hidesNavigationBarDuringPresentation = false
+        return searchController
     }()
     
     private lazy var errorImage: UIImageView = {
@@ -194,8 +188,6 @@ final class TrackersViewController: UIViewController {
         collectionView.delegate = self
         
         trackerCategoryStore.delegate = self
-        //      trackerCategoryStore.setupFetchedResultsController()
-        //      categories = MockData.mockData
         if let savedFilter = appSettingsStore.selectedFilter {
             currentFilter = savedFilter
         } else {
@@ -203,6 +195,12 @@ final class TrackersViewController: UIViewController {
             appSettingsStore.selectedFilter = .allTrackers
         }
         activityIndicator.center = view.center
+        
+        // CHANGE: Настраиваем searchController
+        searchController.searchResultsUpdater = self
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
+        
         setupNavigationBar()
         addSubViews()
         addConstraints()
@@ -213,17 +211,21 @@ final class TrackersViewController: UIViewController {
         
         loadCategories()
         datePickerChanged()
-        AnalyticsService.openScreen()
+        AnalyticsService.shared.activate()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsService.shared.reportScreenOpen(.main)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        AnalyticsService.closeScreen()
+        AnalyticsService.shared.reportScreenClose(.main)
     }
     
     private func addSubViews() {
         view.addSubview(descriptionLabel)
-        view.addSubview(searchTextField)
         view.addSubview(errorImage)
         view.addSubview(errorLabel)
         view.addSubview(errorSearchImage)
@@ -231,6 +233,7 @@ final class TrackersViewController: UIViewController {
         view.addSubview(collectionView)
         view.addSubview(filterButton)
         view.addSubview(activityIndicator)
+        
     }
     
     private func addConstraints() {
@@ -238,11 +241,6 @@ final class TrackersViewController: UIViewController {
             descriptionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             descriptionLabel.heightAnchor.constraint(equalToConstant: 41),
-            
-            searchTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 7),
-            searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            searchTextField.heightAnchor.constraint(equalToConstant: 36),
             
             errorImage.topAnchor.constraint(equalTo: view.topAnchor, constant: 402),
             errorImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -256,7 +254,7 @@ final class TrackersViewController: UIViewController {
             errorSearchLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             errorSearchLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
-            collectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 10),
+            collectionView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 10),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
@@ -273,12 +271,15 @@ final class TrackersViewController: UIViewController {
         guard (navigationController?.navigationBar) != nil else { return }
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
+        
+        navigationItem.title = "Трекеры"
+        navigationController?.navigationBar.prefersLargeTitles = true
     }
     
     // MARK: - Actions
     
     @objc private func didTapPlusButton() {
-        AnalyticsService.tapAddTrack()
+        AnalyticsService.shared.reportClick(screen: .main, item: .addTrack)
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -287,7 +288,7 @@ final class TrackersViewController: UIViewController {
     }
     
     @objc private func filterButtonTapped() {
-        AnalyticsService.tapFilter()
+        AnalyticsService.shared.reportClick(screen: .main, item: .filter)
         let viewController = FiltersViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -318,8 +319,9 @@ final class TrackersViewController: UIViewController {
                     return false
                 }
                 if tracker.schedule.isEmpty || tracker.schedule.contains(selectedWeekDay) {
-                    if let searchText = searchTextField.text?.lowercased(), !searchText.isEmpty {
-                        if !tracker.name.lowercased().contains(searchText) {
+                    // CHANGE: Фильтрация по поиску
+                    if !searchText.isEmpty {
+                        if !tracker.name.lowercased().contains(searchText.lowercased()) {
                             return false
                         }
                     }
@@ -343,7 +345,7 @@ final class TrackersViewController: UIViewController {
         let isEmpty = visibleCategories.isEmpty
         let isFilterEmpty = isEmpty && currentFilter != .allTrackers
         let isNoTrackersForToday = isEmpty && currentFilter == .allTrackers
-        let isSearchError = isEmpty && !(searchTextField.text?.isEmpty ?? true)
+        let isSearchError = isEmpty && !searchText.isEmpty
         
         errorSearchImage.isHidden = !(isSearchError || isFilterEmpty)
         errorSearchLabel.isHidden = !(isSearchError || isFilterEmpty)
@@ -364,19 +366,11 @@ final class TrackersViewController: UIViewController {
     }
 }
 
-extension TrackersViewController: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
+extension TrackersViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        searchText = searchController.searchBar.text ?? ""
         updateVisibleCategories()
-        return true
-    }
-    
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        updateVisibleCategories()
-    }
-    
-    func textFieldDidChangeSelection(_ textField: UITextField) {
-        updateVisibleCategories()
+        updateErrorImageVisibility()
     }
 }
 
@@ -423,11 +417,6 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     private func loadMoreData() {
         startLoading()
         DispatchQueue.global().async {
-//            sleep(1)
-//            DispatchQueue.main.async {
-//                self.collectionView.reloadData()
-//                self.stopLoading()
-//            }
             DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
                 DispatchQueue.main.async {
                     self.collectionView.reloadData()
@@ -482,12 +471,12 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         
         let editAction = UIAction(title: "Редактировать", handler: { _ in
             self.editTracker(id: tracker.id, at: indexPath)
-            AnalyticsService.tapEdit()
+            AnalyticsService.shared.reportClick(screen: .main, item: .edit)
         })
         
         let deleteAction = UIAction(title: "Удалить", attributes: .destructive, handler: { _ in
             self.showDeleteTrackerAlert(id: tracker.id, at: indexPath)
-            AnalyticsService.tapDelete()
+            AnalyticsService.shared.reportClick(screen: .main, item: .delete)
         })
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
@@ -536,8 +525,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             return
         }
         let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
-        let wordDay = TrackerCell.dayWord(for: completedDay)
-        let completedDayText = "\(completedDay) \(wordDay)"
+        let completedDayText = TrackerCell.dayWord(for: completedDay)
         
         let editTrackerVC = NewHabitOrEventViewController(isForHabits: !tracker.schedule.isEmpty)
         editTrackerVC.editTrackerDelegate = self

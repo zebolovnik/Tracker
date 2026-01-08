@@ -97,7 +97,6 @@ final class TrackerCell: UICollectionViewCell {
         button.alpha = 1
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(TrackerCell.self, action: #selector(buttonTapped), for: .touchUpInside)
         return button
     }()
     
@@ -105,6 +104,7 @@ final class TrackerCell: UICollectionViewCell {
         super.init(frame: frame)
         addSubview()
         addConstraints()
+        actionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
     }
     
     @available(*, unavailable)
@@ -124,7 +124,7 @@ final class TrackerCell: UICollectionViewCell {
         self.titleLabel.text = tracker.name
         
         let wordDay = TrackerCell.dayWord(for: completedDay)
-        dayNumberView.text = "\(completedDay) \(wordDay)"
+        dayNumberView.text = wordDay
         
         if isCompletedToday {
             actionButton.tintColor = .ypWhite
@@ -150,21 +150,7 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     static func dayWord(for number: Int) -> String {
-        let lastDigit = number % 10
-        let lastTwoDigits = number % 100
-        
-        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
-            return "manyDays".localized
-        }
-        
-        switch lastDigit {
-        case 1:
-            return "oneDay".localized
-        case 2, 3, 4:
-            return "fewDays".localized
-        default:
-            return "manyDays".localized
-        }
+        return String.localizedStringWithFormat(NSLocalizedString("days_count", comment: ""), number)
     }
     
     func updatePinVisibility(shouldShowPin: Bool) {
@@ -230,6 +216,6 @@ final class TrackerCell: UICollectionViewCell {
         } else {
             delegate?.completeTracker(id: trackerId, at: indexPath)
         }
-        AnalyticsService.tapTrack()
+        AnalyticsService.shared.reportClick(screen: .main, item: .track)
     }
 }

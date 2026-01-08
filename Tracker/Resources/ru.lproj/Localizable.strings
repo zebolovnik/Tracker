@@ -15,3 +15,5 @@
 "oneDay" = "день";
 "fewDays" = "дня";
 "manyDays" = "дней";
+
+"days_count" = "%d дней";

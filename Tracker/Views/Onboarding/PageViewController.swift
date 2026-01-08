@@ -106,11 +106,11 @@ final class PageViewController: UIViewController {
         switch pageType {
         case .first:
             onboardingLabel.text = "Отслеживайте только то, что хотите"
-            onboardingImageView.image = UIImage(resource: .onboardingBlue)
+            onboardingImageView.image = UIImage(named: "OnboardingBlue")
             pageControl.currentPage = 0
         case .second:
             onboardingLabel.text = "Даже если это не литры воды и йога"
-            onboardingImageView.image = UIImage(resource: .onboardingPink)
+            onboardingImageView.image = UIImage(named: "OnboardingPink")
             pageControl.currentPage = 1
         }
     }
