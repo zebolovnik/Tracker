@@ -137,7 +137,36 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     private func updateTrackers(_ trackerCoreData: TrackerCoreData, with tracker: Tracker) {
-        guard let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) else { return }
+        let colorString: String
+        switch tracker.color {
+        case .ypBlack: colorString = "Tr Black"
+        case .ypBackground: colorString = "Tr Background"
+        case .ypWhite: colorString = "Tr White"
+        case .ypBlue: colorString = "Tr Blue"
+        case .ypRed: colorString = "Tr Red"
+        case .ypGray: colorString = "Tr Gray"
+        case .ypLightGray: colorString = "Tr Light Gray"
+        case .colorSelected0: colorString = "Color datePickLabel"
+        case .colorSelected1: colorString = "Color selection 1"
+        case .colorSelected2: colorString = "Color selection 2"
+        case .colorSelected3: colorString = "Color selection 3"
+        case .colorSelected4: colorString = "Color selection 4"
+        case .colorSelected5: colorString = "Color selection 5"
+        case .colorSelected6: colorString = "Color selection 6"
+        case .colorSelected7: colorString = "Color selection 7"
+        case .colorSelected8: colorString = "Color selection 8"
+        case .colorSelected9: colorString = "Color selection 9"
+        case .colorSelected10: colorString = "Color selection 10"
+        case .colorSelected11: colorString = "Color selection 11"
+        case .colorSelected12: colorString = "Color selection 12"
+        case .colorSelected13: colorString = "Color selection 13"
+        case .colorSelected14: colorString = "Color selection 14"
+        case .colorSelected15: colorString = "Color selection 15"
+        case .colorSelected16: colorString = "Color selection 16"
+        case .colorSelected17: colorString = "Color selection 17"
+        case .colorSelected18: colorString = "Color selection 18"
+        default: colorString = "Color selection 17"
+        }
         trackerCoreData.id = tracker.id
         trackerCoreData.name = tracker.name
         trackerCoreData.color = colorString

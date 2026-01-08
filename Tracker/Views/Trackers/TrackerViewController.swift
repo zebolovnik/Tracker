@@ -79,7 +79,7 @@ final class TrackersViewController: UIViewController {
     private lazy var searchTextField: UISearchTextField = {
         let textField = UISearchTextField()
         let placeholderAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.colorSelected00,
+            .foregroundColor: UIColor.ypGray.withAlphaComponent(0.3),
             .font: UIFont.systemFont(ofSize: 17, weight: .regular)
         ]
         textField.attributedPlaceholder = NSAttributedString(string: "Поиск", attributes: placeholderAttributes)
@@ -133,7 +133,6 @@ final class TrackersViewController: UIViewController {
         datePicker.datePickerMode = .date
         let localID = Locale.preferredLanguages.first ?? "ru_RU"
         datePicker.locale = Locale(identifier: localID)
-        datePicker.overrideUserInterfaceStyle = .light
         datePicker.backgroundColor = .colorSelected0
         datePicker.layer.cornerRadius = 8
         datePicker.clipsToBounds = true
@@ -179,7 +178,6 @@ final class TrackersViewController: UIViewController {
         button.backgroundColor = .ypBlue
         button.setTitle("buttonFilters.title".localized, for: .normal)
         button.titleLabel?.textColor = .ypWhite
-        button.overrideUserInterfaceStyle = .light
         button.layer.cornerRadius = 16
         button.titleLabel?.textAlignment = .center
         button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
@@ -210,7 +208,7 @@ final class TrackersViewController: UIViewController {
         addConstraints()
         updateErrorImageVisibility()
         
-        newHabitOrEventViewController = NewHabitOrEventViewController()
+        newHabitOrEventViewController = NewHabitOrEventViewController(isForHabits: true)
         newHabitOrEventViewController.delegate = self
         
         loadCategories()
@@ -397,7 +395,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard indexPath.section < visibleCategories.count else {
-            print("Ошибка: indexPath.section (\(indexPath.section)) выходит за пределы visibleCategories (\(visibleCategories.count))")
+            Logger.error("Ошибка: indexPath.section (\(indexPath.section)) выходит за пределы visibleCategories (\(visibleCategories.count))")
             return UICollectionViewCell()
         }
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
@@ -456,7 +454,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             let completedDates = try trackerRecordStore.completedDays(for: id)
             return completedDates.contains { Calendar.current.isDate($0, inSameDayAs: datePicker.date) }
         } catch {
-            print("Ошибка при получении выполненных дней трекера: \(error)")
+            Logger.error("Ошибка при получении выполненных дней трекера: \(error)")
             return false
         }
     }
@@ -465,7 +463,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         do {
             return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date)
         } catch {
-            print("Ошибка при проверке записи трекера: \(error)")
+            Logger.error("Ошибка при проверке записи трекера: \(error)")
             return false
         }
     }
@@ -517,7 +515,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             updateVisibleCategories()
             collectionView.reloadItems(at: [indexPath])
         } catch {
-            print("Ошибка при закреплении трекера: \(error)")
+            Logger.error("Ошибка при закреплении трекера: \(error)")
         }
     }
     
@@ -527,7 +525,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             updateVisibleCategories()
             collectionView.reloadItems(at: [indexPath])
         } catch {
-            print("Ошибка при откреплении трекера: \(error)")
+            Logger.error("Ошибка при откреплении трекера: \(error)")
         }
     }
     
@@ -562,10 +560,10 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
                     self.trackers.removeAll { $0.id == id }
                     self.updateVisibleCategories()
                 } catch {
-                    print("Ошибка при удалении трекера: \(error)")
+                    Logger.error("Ошибка при удалении трекера: \(error)")
                 }
             } else {
-                print("Трекер с id \(id) не найден в массиве")
+                Logger.error("Трекер с id \(id) не найден в массиве")
             }
         }
         
@@ -617,13 +615,13 @@ extension TrackersViewController: TrackerCellDelegate {
         let todayDate = Date()
         guard currentDate <= todayDate else {
             showDateAlert()
-            print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
+            Logger.error("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
             return
         }
         do {
             try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
         } catch {
-            print("Ошибка при обновлении записи в CoreData: \(error)")
+            Logger.error("Ошибка при обновлении записи в CoreData: \(error)")
         }
         collectionView.reloadItems(at: [indexPath])
     }
@@ -632,7 +630,7 @@ extension TrackersViewController: TrackerCellDelegate {
         do {
             try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
         } catch {
-            print("Ошибка при удалении записи из CoreData: \(error)")
+            Logger.error("Ошибка при удалении записи из CoreData: \(error)")
         }
         collectionView.reloadItems(at: [indexPath])
     }
@@ -647,7 +645,7 @@ extension TrackersViewController: TrackerCellDelegate {
 extension TrackersViewController: TrackerCategoryStoreDelegate {
     private func loadCategories() {
         if trackerCategoryStore.trackersCategory.isEmpty {
-            print("Категории пусты")
+            Logger.warning("Категории пусты")
         }
         categories = trackerCategoryStore.trackersCategory
         trackers = categories.flatMap { $0.trackers }

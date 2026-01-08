@@ -13,42 +13,44 @@ final class DaysValueTransformer: ValueTransformer {
     override class func allowsReverseTransformation() -> Bool { true }
     
     override func transformedValue(_ value: Any?) -> Any? {
-        print("DVT - Начальное значение \(String(describing: value))")
+        Logger.debug("DVT - Начальное значение \(String(describing: value))")
         
         guard let days = value as? [WeekDay?] else {
-            print("DVT - Возвращаю nil так как не подходящее значение value: \(String(describing: value))")
+            Logger.debug("DVT - Возвращаю nil так как не подходящее значение value: \(String(describing: value))")
             return nil
         }
         let filteredDays = days.compactMap { $0 }
         
         if filteredDays.isEmpty {
+            Logger.debug("DVT - массив расписания пуст")
         } else {
-            print("DVT - массив не пуст, сохраняем данные.")
+            Logger.debug("DVT - массив не пуст, сохраняем данные.")
         }
         
         do {
             let encodedData = try JSONEncoder().encode(filteredDays) as NSData
             return encodedData as NSData
         } catch {
-            print("DVT - Ошибка кодирования: \(error)")
+            Logger.error("DVT - Ошибка кодирования: \(error)")
             return nil
         }
     }
     
     override func reverseTransformedValue(_ value: Any?) -> Any? {
         guard let data = value as? NSData else {
-            print("DVT - Ошибка: scheduleData не NSData - возвращаю nil")
+            Logger.error("DVT - Ошибка: scheduleData не NSData - возвращаю nil")
             return nil
         }
         if let jsonString = String(data: data as Data, encoding: .utf8) {
+            Logger.debug("DVT - JSON перед декодированием: \(jsonString)")
         } else {
-            print("DVT - Ошибка: не удалось преобразовать в строку")
+            Logger.error("DVT - Ошибка: не удалось преобразовать в строку")
         }
         do {
             let decodedDays = try JSONDecoder().decode([WeekDay].self, from: data as Data)
             return decodedDays
         } catch {
-            print("DVT - Ошибка декодирования: \(error)")
+            Logger.error("DVT - Ошибка декодирования: \(error)")
             return nil
         }
     }

@@ -48,7 +48,6 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypWhite
-        label.overrideUserInterfaceStyle = .light
         label.textAlignment = .left
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -58,7 +57,6 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var emojiView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypWhite.withAlphaComponent(0.3)
-        view.overrideUserInterfaceStyle = .light
         view.clipsToBounds = true
         view.layer.cornerRadius = 24 / 2
         view.layer.masksToBounds = true
@@ -109,9 +107,9 @@ final class TrackerCell: UICollectionViewCell {
         addConstraints()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
@@ -225,7 +223,7 @@ final class TrackerCell: UICollectionViewCell {
     
     @objc private func buttonTapped() {
         guard let trackerId = trackerId, let indexPath = indexPath else {
-            print("Нет ID трекера")
+            Logger.error("Нет ID трекера")
             return }
         if isCompletedToday {
             delegate?.uncompleteTracker(id: trackerId, at: indexPath)

@@ -62,8 +62,9 @@ final class PageViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     override func viewDidLoad() {
@@ -105,11 +106,11 @@ final class PageViewController: UIViewController {
         switch pageType {
         case .first:
             onboardingLabel.text = "Отслеживайте только то, что хотите"
-            onboardingImageView.image = UIImage(named: "OnboardingBlue")
+            onboardingImageView.image = UIImage(resource: .onboardingBlue)
             pageControl.currentPage = 0
         case .second:
             onboardingLabel.text = "Даже если это не литры воды и йога"
-            onboardingImageView.image = UIImage(named: "OnboardingPink")
+            onboardingImageView.image = UIImage(resource: .onboardingPink)
             pageControl.currentPage = 1
         }
     }
