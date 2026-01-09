@@ -21,3 +21,4 @@
 "statistics.title" = "Statistics";
 "statistics.completed" = "Trackers completed";
 "statistics.empty" = "Nothing to analyze yet";
+"trackers.empty.title" = "What would you like to track?";

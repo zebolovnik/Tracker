@@ -169,9 +169,6 @@ extension CategoryViewController: UITableViewDataSource {
         let title = categoryViewModel.getCategories()[indexPath.row]
         let isSelected = categoryViewModel.isCategorySelected(title)
         
-        let isFirst = indexPath.row == 0
-        let isLast = indexPath.row == categoryViewModel.getCategories().count - 1
-        
         cell.configure(with: title, isSelected: isSelected)
         return cell
     }
@@ -183,10 +180,12 @@ extension CategoryViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let category = categoryViewModel.getCategories()[indexPath.row]
+        
         categoryViewModel.selectCategory(category)
         delegate?.didSelectCategory(category)
+        
         tableView.reloadData()
-        navigationController?.popViewController(animated: true)
+        dismiss(animated: true)
     }
     
     func tableView(
@@ -197,12 +196,22 @@ extension CategoryViewController: UITableViewDelegate {
         
         let category = categoryViewModel.getCategories()[indexPath.row]
         
-        let editAction = UIAction(title: "Редактировать") { _ in
-            let editVC = NewCategoryViewController()
-            editVC.initialTitle = category
-            editVC.delegate = self
-            
-            let nav = UINavigationController(rootViewController: editVC)
+        let editAction = UIAction(title: "Редактировать") { [weak self] _ in
+            guard let self else { return }
+
+            let oldTitle = self.categoryViewModel.getCategories()[indexPath.row]
+
+            let vc = NewCategoryViewController()
+            vc.initialTitle = oldTitle
+
+            vc.onSave = { [weak self] newTitle in
+                self?.categoryViewModel.updateCategory(
+                    oldTitle: oldTitle,
+                    newTitle: newTitle
+                )
+            }
+
+            let nav = UINavigationController(rootViewController: vc)
             nav.modalPresentationStyle = .pageSheet
             self.present(nav, animated: true)
         }
@@ -210,23 +219,23 @@ extension CategoryViewController: UITableViewDelegate {
         let deleteAction = UIAction(
             title: "Удалить",
             attributes: .destructive
-        ) { _ in
+        ) { [weak self] _ in
+            guard let self else { return }
+            
             let alert = UIAlertController(
                 title: "Эта категория точно не нужна?",
                 message: nil,
                 preferredStyle: .actionSheet
             )
             
-            let confirmAction = UIAlertAction(title: "Удалить", style: .destructive) { _ in
+            let confirm = UIAlertAction(title: "Удалить", style: .destructive) { _ in
                 self.categoryViewModel.deleteCategory(category)
-                tableView.reloadData()
             }
             
-            let cancelAction = UIAlertAction(title: "Отменить", style: .cancel)
+            let cancel = UIAlertAction(title: "Отменить", style: .cancel)
             
-            alert.addAction(confirmAction)
-            alert.addAction(cancelAction)
-            
+            alert.addAction(confirm)
+            alert.addAction(cancel)
             self.present(alert, animated: true)
         }
         
@@ -247,15 +256,6 @@ extension CategoryViewController: UITableViewDelegate {
 
 extension CategoryViewController: NewCategoryDelegate {
     func addNewCategory(newCategory: String) {
-        let categories = categoryViewModel.getCategories()
-        
-        if let selected = categories.first,
-           categoryViewModel.isCategorySelected(selected) {
-            categoryViewModel.updateCategory(at: 0, newTitle: newCategory)
-        } else {
-            categoryViewModel.addCategory(newCategory)
-        }
-        
-        tableView.reloadData()
+        categoryViewModel.addCategory(newCategory)
     }
 }

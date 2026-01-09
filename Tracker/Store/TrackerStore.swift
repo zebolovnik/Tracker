@@ -34,7 +34,13 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         let existingTrackers = try context.fetch(fetchRequest)
         let trackerCoreData: TrackerCoreData
         
+        let categoryToAdd = try fetchCategory(with: category.title) ?? createNewCategory(with: category.title)
+        
         if let existingTrackerCoreData = existingTrackers.first {
+            if let oldCategory = existingTrackerCoreData.category {
+                oldCategory.removeFromTracker(existingTrackerCoreData)
+            }
+            
             trackerCoreData = existingTrackerCoreData
             updateTrackers(trackerCoreData, with: tracker)
             print("Трекер \(tracker.name) обновлен в Core Data")
@@ -43,7 +49,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             updateTrackers(trackerCoreData, with: tracker)
             print("Трекер \(tracker.name) добавлен в Core Data")
         }
-        let categoryToAdd = try fetchCategory(with: category.title) ?? createNewCategory(with: category.title)
+        
         categoryToAdd.addToTracker(trackerCoreData)
         saveContext()
     }

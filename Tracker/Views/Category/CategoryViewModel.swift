@@ -59,14 +59,16 @@ final class CategoryViewModel {
         }
     }
     
-    func updateCategory(at index: Int, newTitle: String) {
-        guard index < categories.count else { return }
+    func updateCategory(oldTitle: String, newTitle: String) {
         let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        
-        let oldTitle = categories[index]
-        categories[index] = trimmed
-        onCategoriesUpdated?(categories)
+
+        do {
+            try categoryStore.updateCategory(oldTitle: oldTitle, newTitle: trimmed)
+            loadCategories()
+        } catch {
+            onError?("Ошибка обновления категории")
+        }
     }
     
     private func loadCategories() {

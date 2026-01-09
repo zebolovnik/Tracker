@@ -13,207 +13,187 @@ protocol TrackerCategoryStoreDelegate: AnyObject {
 }
 
 final class TrackerCategoryStore: NSObject {
+
+    // MARK: - Public
+
+    weak var delegate: TrackerCategoryStoreDelegate?
+
     var trackersCategory: [TrackerCategory] {
         guard
-            let data = self.fetchedResultsController?.fetchedObjects,
-            let categories = try? data.map({ try self.getCategories(from: $0) })
+            let objects = fetchedResultsController?.fetchedObjects
         else { return [] }
-        return categories
+
+        return objects.compactMap { try? getCategories(from: $0) }
     }
-    
-    weak var delegate: TrackerCategoryStoreDelegate?
-    
+
+    // MARK: - Private
+
     private let context: NSManagedObjectContext
     private var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCoreData>?
-    
+
     private var insertedIndexes: Set<IndexPath> = []
     private var deletedIndexes: Set<IndexPath> = []
     private var updatedIndexes: Set<IndexPath> = []
-    
+
+    // MARK: - Init
+
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            assertionFailure("AppDelegate could not be cast to expected type.") // CHANGE: Убрал fatalError
+            assertionFailure("AppDelegate cast failed")
             self.init(context: NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType))
             return
         }
-        let context = appDelegate.persistentContainer.viewContext
-        self.init(context: context)
+        self.init(context: appDelegate.persistentContainer.viewContext)
     }
-    
+
     init(context: NSManagedObjectContext) {
         self.context = context
         super.init()
         setupFetchedResultsController()
     }
-    
+
     func setDelegate(_ delegate: TrackerCategoryStoreDelegate) {
         self.delegate = delegate
     }
-    
+
+    // MARK: - CRUD
+
     func fetchAllCategories() throws -> [TrackerCategory] {
-        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
-        let result = try context.fetch(fetchRequest)
-        
-        return result.compactMap { trackerCategoryCoreData in
-            do {
-                return try getCategories(from: trackerCategoryCoreData)
-            } catch {
-                print("Ошибка при создании Tracker в TrackerStore: \(error)")
-                return nil
-            }
-        }
+        let request: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        return try context.fetch(request).compactMap { try? getCategories(from: $0) }
     }
-    
+
     func addCategory(_ category: TrackerCategory) throws {
-        let categoryEntity = TrackerCategoryCoreData(context: context)
-        categoryEntity.title = category.title
-        categoryEntity.tracker = NSSet(array: category.trackers.map { mapToCoreData($0) })
+        let entity = TrackerCategoryCoreData(context: context)
+        entity.title = category.title
+        entity.tracker = NSSet(array: category.trackers.map { mapToCoreData($0) })
         saveContext()
     }
-    
+
     func deleteCategory(_ category: TrackerCategory) throws {
-        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "title == %@", category.title)
-        
-        guard let categoryToDelete = try context.fetch(fetchRequest).first else { return }
-        context.perform {
-            self.context.delete(categoryToDelete)
-            self.saveContext()
-        }
+        let request: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "title == %@", category.title)
+
+        guard let entity = try context.fetch(request).first else { return }
+        context.delete(entity)
+        saveContext()
     }
-    
-    private func getCategories(from trackerCategoryStore: TrackerCategoryCoreData) throws -> TrackerCategory {
-        guard let title = trackerCategoryStore.title else { throw TrackerStoreError.missingTitle }
-        var trackers: [Tracker] = []
-        
-        guard let trackerSet = trackerCategoryStore.tracker as? Set<TrackerCoreData> else {
-            return TrackerCategory(title: title, trackers: [])
-        }
-        
-        for trackerCoreData in trackerSet {
-            do {
-                let tracker = try createTracker(from: trackerCoreData)
-                trackers.append(tracker)
-            } catch {
-                print("TrackerCategoryStore Не удалось создать трекер для категории \(title): \(error)")
-            }
-        }
-        return TrackerCategory(title: title, trackers: trackers)
+
+    func updateCategory(oldTitle: String, newTitle: String) throws {
+        let request: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "title == %@", oldTitle)
+
+        guard let entity = try context.fetch(request).first else { return }
+        entity.title = newTitle
+        saveContext()
     }
-    
-    private func mapToCoreData(_ tracker: Tracker) -> TrackerCoreData {
-        guard let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) else {
-            assertionFailure("TrackerCategoryStore Не удалось найти строковое представление для цвета")
-            let trackerEntity = TrackerCoreData(context: context)
-            trackerEntity.id = tracker.id
-            trackerEntity.name = tracker.name
-            trackerEntity.color = "Color1"
-            trackerEntity.emoji = tracker.emoji
-            trackerEntity.schedule = tracker.schedule as NSObject
-            return trackerEntity
-        }
-        
-        let trackerEntity = TrackerCoreData(context: context)
-        trackerEntity.id = tracker.id
-        trackerEntity.name = tracker.name
-        trackerEntity.color = colorString
-        trackerEntity.emoji = tracker.emoji
-        print("TrackerCategoryStore - Исходное schedule перед трансформацией: \(tracker.schedule)")
-        trackerEntity.schedule = tracker.schedule as NSObject
-        return trackerEntity
-    }
-    
-    private func createTracker(from trackerCoreData: TrackerCoreData) throws -> Tracker {
-        guard let id = trackerCoreData.id ?? UUID() as UUID?,
-              let name = trackerCoreData.name else {
+
+    // MARK: - Mapping
+
+    private func getCategories(from coreData: TrackerCategoryCoreData) throws -> TrackerCategory {
+        guard let title = coreData.title else {
             throw TrackerStoreError.missingTitle
         }
-        
-        let color: UIColor
-        if let colorName = trackerCoreData.color, let uiColor = UIColor(named: colorName) {
-            color = uiColor
-        } else {
-            color = .colorSelected17
+
+        let trackers = (coreData.tracker as? Set<TrackerCoreData>)?
+            .compactMap { try? createTracker(from: $0) } ?? []
+
+        return TrackerCategory(title: title, trackers: trackers)
+    }
+
+    private func mapToCoreData(_ tracker: Tracker) -> TrackerCoreData {
+        let entity = TrackerCoreData(context: context)
+        entity.id = tracker.id
+        entity.name = tracker.name
+        entity.emoji = tracker.emoji
+        entity.schedule = tracker.schedule as NSObject
+        entity.color = colorDictionary.first(where: { $0.value == tracker.color })?.key ?? "Color1"
+        return entity
+    }
+
+    private func createTracker(from coreData: TrackerCoreData) throws -> Tracker {
+        guard
+            let id = coreData.id,
+            let name = coreData.name
+        else {
+            throw TrackerStoreError.missingTitle
         }
-        
-        let emoji = trackerCoreData.emoji ?? ""
-        var schedule: [WeekDay] = []
-        if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
-            schedule = scheduleData.compactMap { $0 }
-        }
-        if schedule.isEmpty {
-            print("ТrackerCoreData: расписание оказалось пустым после фильтрации.")
-        }
+
+        let color = UIColor(named: coreData.color ?? "") ?? .colorSelected17
+        let emoji = coreData.emoji ?? ""
+        let schedule = (coreData.schedule as? [WeekDay]) ?? []
+
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
-    
+
+    // MARK: - FRC
+
     private func setupFetchedResultsController() {
-        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        
-        let controller = NSFetchedResultsController(
-            fetchRequest: fetchRequest,
+        let request: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+
+        let frc = NSFetchedResultsController(
+            fetchRequest: request,
             managedObjectContext: context,
             sectionNameKeyPath: nil,
             cacheName: nil
         )
-        controller.delegate = self
-        self.fetchedResultsController = controller
-        do {
-            try controller.performFetch()
-        } catch {
-            print("Failed to fetch categories: \(error)")
-        }
+
+        frc.delegate = self
+        fetchedResultsController = frc
+
+        try? frc.performFetch()
     }
-    
+
+    // MARK: - Save
+
     private func saveContext() {
         do {
             try context.save()
         } catch {
             context.rollback()
-            print("Failed to save context: \(error)")
+            print("CoreData save error: \(error)")
         }
     }
 }
 
-extension  TrackerCategoryStore: NSFetchedResultsControllerDelegate {
+// MARK: - NSFetchedResultsControllerDelegate
+
+extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
+
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         insertedIndexes.removeAll()
         deletedIndexes.removeAll()
         updatedIndexes.removeAll()
     }
-    
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
-                    didChange anObject: Any,
-                    at indexPath: IndexPath?,
-                    for type: NSFetchedResultsChangeType,
-                    newIndexPath: IndexPath?) {
+
+    func controller(
+        _ controller: NSFetchedResultsController<NSFetchRequestResult>,
+        didChange anObject: Any,
+        at indexPath: IndexPath?,
+        for type: NSFetchedResultsChangeType,
+        newIndexPath: IndexPath?
+    ) {
         switch type {
         case .insert:
-            if let newIndexPath = newIndexPath {
-                insertedIndexes.insert(newIndexPath)
-            }
+            if let newIndexPath { insertedIndexes.insert(newIndexPath) }
         case .delete:
-            if let indexPath = indexPath {
-                deletedIndexes.insert(indexPath)
-            }
+            if let indexPath { deletedIndexes.insert(indexPath) }
         case .update:
-            if let indexPath = indexPath {
-                updatedIndexes.insert(indexPath)
-            }
+            if let indexPath { updatedIndexes.insert(indexPath) }
         case .move:
-            if let oldIndexPath = indexPath {
-                deletedIndexes.insert(oldIndexPath)
-            }
-            if let newIndexPath = newIndexPath {
-                insertedIndexes.insert(newIndexPath)
-            }
+            if let indexPath { deletedIndexes.insert(indexPath) }
+            if let newIndexPath { insertedIndexes.insert(newIndexPath) }
         @unknown default:
             break
         }
     }
-    
+
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        delegate?.didUpdateCategories(inserted: insertedIndexes, deleted: deletedIndexes, updated: updatedIndexes)
+        delegate?.didUpdateCategories(
+            inserted: insertedIndexes,
+            deleted: deletedIndexes,
+            updated: updatedIndexes
+        )
     }
 }

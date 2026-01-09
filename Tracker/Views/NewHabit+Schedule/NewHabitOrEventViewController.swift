@@ -312,6 +312,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         schedule = editingTracker?.schedule ?? []
         trackerNameInput.text = editingTracker?.name
         createButton.setTitle("Сохранить", for: .normal)
+        validateCreateButtonState()
     }
     
     @objc
@@ -323,19 +324,20 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             emoji: self.emoji ?? "🌟",
             schedule: self.schedule
         )
-        
+
         let categoryTracker = TrackerCategory(
             title: self.categoryTitle ?? "Разное",
-            trackers: [newTracker])
-        
-        if let delegate = delegate {
-            delegate.addTracker(newTracker, to: categoryTracker)
-            presentingViewController?.presentingViewController?.dismiss(animated: true)
-        } else if let editTrackerDelegate = editTrackerDelegate {
-            editTrackerDelegate.addTracker(newTracker, to: categoryTracker)
-            self.dismiss(animated: true)
+            trackers: [newTracker]
+        )
+
+        if editingTracker != nil {
+            editTrackerDelegate?.addTracker(newTracker, to: categoryTracker)
+            dismiss(animated: true)
+            return
         }
-        Logger.debug("🔘 Tapped Создать и в категорию: \(categoryTracker.title) добавляется трекер: \(newTracker.name)")
+
+        delegate?.addTracker(newTracker, to: categoryTracker)
+        presentingViewController?.dismiss(animated: true)
     }
     
     @objc
@@ -373,6 +375,7 @@ extension NewHabitOrEventViewController: CategoryViewControllerDelegate {
     func didSelectCategory(_ category: String) {
         self.categoryTitle = category
         trackerItems.reloadData()
+        validateCreateButtonState()
     }
 }
 
@@ -501,5 +504,6 @@ extension NewHabitOrEventViewController: UICollectionViewDelegate, UICollectionV
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
             Logger.debug("Выбран цвет: \(colors[indexPath.item])")
         }
+        validateCreateButtonState()
     }
 }
