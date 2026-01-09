@@ -11,11 +11,13 @@ import CoreData
 final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     private let context: NSManagedObjectContext
     private var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
+    private var pinnedTrackers: Set<UUID> = []
     
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            assertionFailure("AppDelegate could not be cast to expected type.")
-            self.init(context: NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType))
+            Logger.error("TrackerStore: AppDelegate could not be cast to expected type.")
+            let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+            self.init(context: context)
             return
         }
         let context = appDelegate.persistentContainer.viewContext
@@ -34,22 +36,16 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         let existingTrackers = try context.fetch(fetchRequest)
         let trackerCoreData: TrackerCoreData
         
-        let categoryToAdd = try fetchCategory(with: category.title) ?? createNewCategory(with: category.title)
-        
         if let existingTrackerCoreData = existingTrackers.first {
-            if let oldCategory = existingTrackerCoreData.category {
-                oldCategory.removeFromTracker(existingTrackerCoreData)
-            }
-            
             trackerCoreData = existingTrackerCoreData
             updateTrackers(trackerCoreData, with: tracker)
-            print("Трекер \(tracker.name) обновлен в Core Data")
+            Logger.debug("Трекер \(tracker.name) обновлен в Core Data")
         } else {
             trackerCoreData = TrackerCoreData(context: context)
             updateTrackers(trackerCoreData, with: tracker)
-            print("Трекер \(tracker.name) добавлен в Core Data")
+            Logger.debug("Трекер \(tracker.name) добавлен в Core Data")
         }
-        
+        let categoryToAdd = try fetchCategory(with: category.title) ?? createNewCategory(with: category.title)
         categoryToAdd.addToTracker(trackerCoreData)
         saveContext()
     }
@@ -61,7 +57,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             do {
                 return try createTracker(from: trackerCoreData)
             } catch {
-                print("Ошибка при создании Tracker в TrackerStore: \(error)")
+                Logger.error("Ошибка при создании Tracker в TrackerStore: \(error.localizedDescription)")
                 return nil
             }
         }
@@ -69,14 +65,27 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     
     func pinTracker(id: UUID) throws {
         guard let trackerCoreData = try fetchTrackerCoreData(by: id) else { return }
-        trackerCoreData.isPinned = true
-        saveContext()
+        if !pinnedTrackers.contains(id) {
+            pinnedTrackers.insert(id)
+            let originalCategory = trackerCoreData.category?.title
+            trackerCoreData.isPinned = true
+            trackerCoreData.originalCategory = originalCategory
+            try updateTrackerCategory(trackerCoreData, categoryTitle: "Закрепленные")
+            saveContext()
+        }
     }
     
     func unpinTracker(id: UUID) throws {
         guard let trackerCoreData = try fetchTrackerCoreData(by: id) else { return }
-        trackerCoreData.isPinned = false
-        saveContext()
+        if pinnedTrackers.contains(id) {
+            pinnedTrackers.remove(id)
+            if let originalCategory = trackerCoreData.originalCategory {
+                try updateTrackerCategory(trackerCoreData, categoryTitle: originalCategory)
+            }
+            trackerCoreData.isPinned = false
+            trackerCoreData.originalCategory = nil
+            saveContext()
+        }
     }
     
     func fetchPinnedTrackers() -> [Tracker] {
@@ -86,7 +95,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             let results = try context.fetch(fetchRequest)
             return results.compactMap { try? createTracker(from: $0) }
         } catch {
-            print("Ошибка при получении закрепленных трекеров: \(error)")
+            Logger.error("Ошибка при получении закрепленных трекеров: \(error.localizedDescription)")
             return []
         }
     }
@@ -100,7 +109,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
                 return tracker.isPinned
             }
         } catch {
-            print("Ошибка при получении состояния isPinned для трекера \(id): \(error)")
+            Logger.error("Ошибка при получении состояния isPinned для трекера \(id): \(error.localizedDescription)")
         }
         return false
     }
@@ -132,19 +141,15 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     
     private func updateTrackers(_ trackerCoreData: TrackerCoreData, with tracker: Tracker) {
         guard let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) else {
-            assertionFailure("TrackerStore: Не удалось найти строковое представление для цвета") // CHANGE
-            trackerCoreData.id = tracker.id
-            trackerCoreData.name = tracker.name
-            trackerCoreData.color = "Color1"
-            trackerCoreData.emoji = tracker.emoji
-            trackerCoreData.schedule = tracker.schedule as NSObject
+            Logger.error("TrackerStore: Не удалось найти строковое представление для цвета \(tracker.color)")
+            assertionFailure("TrackerStore: Не удалось найти строковое представление для цвета \(tracker.color)")
             return
         }
         trackerCoreData.id = tracker.id
         trackerCoreData.name = tracker.name
         trackerCoreData.color = colorString
         trackerCoreData.emoji = tracker.emoji
-        print("TrackerStore updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
+        Logger.debug("TrackerStore updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
         trackerCoreData.schedule = tracker.schedule as NSObject
     }
     
@@ -167,7 +172,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             schedule = scheduleData.compactMap { $0 }
         }
         if schedule.isEmpty {
-            print("TrackerStore: расписание оказалось пустым после фильтрации.")
+            Logger.warning("TrackerStore: расписание оказалось пустым после фильтрации.")
         }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
@@ -199,17 +204,17 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         do {
             try controller.performFetch()
         } catch {
-            print("Failed to fetch trackers: \(error)")
+            Logger.error("Failed to fetch trackers: \(error.localizedDescription)")
         }
     }
     
     private func saveContext() {
         do {
             try context.save()
-            print("✅ Данные успешно сохранены в Core Data")
+            Logger.debug("Данные успешно сохранены в Core Data")
         } catch {
             context.rollback()
-            print("❌ Ошибка сохранения в Core Data: \(error)")
+            Logger.error("Ошибка сохранения в Core Data: \(error.localizedDescription)")
         }
     }
 }

@@ -13,52 +13,9 @@ protocol CategoryViewControllerDelegate: AnyObject {
 
 final class CategoryViewController: UIViewController {
     
-    // MARK: - Properties
     weak var delegate: CategoryViewControllerDelegate?
-    private let categoryViewModel: CategoryViewModel
     
-    // MARK: - UI
-    
-    private lazy var tableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .plain)
-        tableView.backgroundColor = .ypBackground
-        tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
-        tableView.separatorStyle = .none
-        tableView.rowHeight = 75
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        return tableView
-    }()
-    
-    private lazy var placeholderImage: UIImageView = {
-        let imageView = UIImageView(image: UIImage(named: "Error"))
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
-    private lazy var placeholderLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Привычки и события можно\nобъединить по смыслу"
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .ypBlack
-        label.textAlignment = .center
-        label.numberOfLines = 2
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private lazy var addButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Добавить категорию", for: .normal)
-        button.setTitleColor(.ypWhite, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .ypBlack
-        button.layer.cornerRadius = 16
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
-        return button
-    }()
-    
-    // MARK: - Init
+    private var categoryViewModel: CategoryViewModel
     
     init(categoryViewModel: CategoryViewModel) {
         self.categoryViewModel = categoryViewModel
@@ -66,196 +23,234 @@ final class CategoryViewController: UIViewController {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
-    // MARK: - Lifecycle
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .ypBlack
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.textAlignment = .center
+        label.text = "Категория"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var placeholderImage: UIImageView = {
+        let errorImage = UIImageView()
+        errorImage.image = UIImage(named: "Error")
+        errorImage.translatesAutoresizingMaskIntoConstraints = false
+        return errorImage
+    }()
+    
+    private lazy var placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Привычки и события можно объединить по смыслу"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .ypBlack
+        label.numberOfLines = 2
+        label.lineBreakMode = .byWordWrapping
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.backgroundColor = .ypBackground
+        tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
+        tableView.layer.cornerRadius = 16
+        tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
+        tableView.clipsToBounds = true
+        tableView.layer.masksToBounds = true
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorStyle = .singleLine
+        tableView.separatorColor = .ypGray
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }()
+    
+    private lazy var categoryButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = .ypBlack
+        button.setTitleColor(.ypWhite, for: .normal)
+        button.setTitle("Добавить категорию", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16)
+        button.titleLabel?.textAlignment = .center
+        button.layer.cornerRadius = 16
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(categoryButtonTapped), for: .touchUpInside)
+        return button
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
-        setupConstraints()
-        bindViewModel()
-    }
-    
-    // MARK: - Setup
-    
-    private func setupUI() {
         view.backgroundColor = .ypWhite
-        navigationItem.title = "Категория"
-        navigationController?.navigationBar.titleTextAttributes = [
-            .foregroundColor: UIColor.ypBlack,
-            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
-        ]
-        
         tableView.delegate = self
         tableView.dataSource = self
-        
-        view.addSubview(tableView)
-        view.addSubview(placeholderImage)
-        view.addSubview(placeholderLabel)
-        view.addSubview(addButton)
-        
-        updatePlaceholderVisibility()
+        setupBindings()
+        setupNavigationBar()
+        addSubViews()
+        addConstraints()
     }
     
-    private func setupConstraints() {
+    private func setupBindings() {
+        categoryViewModel.onCategoriesUpdated = { [weak self] categories in
+            self?.tableView.reloadData()
+            self?.updateTableViewHeight()
+            self?.showContentOrPlaceholder()
+        }
+    }
+    
+    private func setupNavigationBar() {
+        guard let navigationBar = navigationController?.navigationBar else { return }
+        navigationBar.topItem?.titleView = titleLabel
+        titleLabel.sizeToFit()
+    }
+    
+    private func addSubViews() {
+        view.addSubview(titleLabel)
+        view.addSubview(placeholderImage)
+        view.addSubview(placeholderLabel)
+        view.addSubview(tableView)
+        view.addSubview(categoryButton)
+    }
+    
+    private func addConstraints() {
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -16),
-            
+            placeholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            placeholderImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 232),
             
             placeholderLabel.topAnchor.constraint(equalTo: placeholderImage.bottomAnchor, constant: 8),
             placeholderLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             placeholderLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            placeholderLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            addButton.heightAnchor.constraint(equalToConstant: 60),
-            addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            addButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
-        ])
-    }
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            tableView.heightAnchor.constraint(equalToConstant: CGFloat(75 * categoryViewModel.getCategories().count)),
+            
+            
+            categoryButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            categoryButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            categoryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            categoryButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            categoryButton.heightAnchor.constraint(equalToConstant: 60)
+        ])}
     
-    private func bindViewModel() {
-        categoryViewModel.onCategoriesUpdated = { [weak self] _ in
-            self?.tableView.reloadData()
-            self?.updatePlaceholderVisibility()
+    private func showContentOrPlaceholder() {
+        if categoryViewModel.getCategories().isEmpty {
+            tableView.isHidden = true
+            placeholderImage.isHidden = false
+            placeholderLabel.isHidden = false
+        } else {
+            tableView.isHidden = false
+            placeholderImage.isHidden = true
+            placeholderLabel.isHidden = true
         }
     }
     
-    private func updatePlaceholderVisibility() {
-        let hasCategories = !categoryViewModel.getCategories().isEmpty
-        tableView.isHidden = !hasCategories
-        placeholderImage.isHidden = hasCategories
-        placeholderLabel.isHidden = hasCategories
+    private func updateTableViewHeight() {
+        let categoriesCount = categoryViewModel.getCategories().count
+        let newHeight = CGFloat(75 * categoriesCount)
+        
+        if let existingConstraint = tableView.constraints.first(where: { $0.firstAttribute == .height }) {
+            existingConstraint.isActive = false
+        }
+        
+        tableView.heightAnchor.constraint(equalToConstant: newHeight).isActive = true
     }
     
-    // MARK: - Actions
-    
-    @objc private func addButtonTapped() {
-        let vc = NewCategoryViewController()
-        vc.delegate = self
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
-        present(nav, animated: true)
+    @objc private func categoryButtonTapped() {
+        Logger.logPrint("🔘 Tapped Добавить категорию", category: "UI")
+        let newCategoryViewController = NewCategoryViewController()
+        newCategoryViewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: newCategoryViewController)
+        navigationController.modalPresentationStyle = .pageSheet
+        present(navigationController, animated: true)
     }
 }
 
-// MARK: - UITableViewDataSource
-
-extension CategoryViewController: UITableViewDataSource {
-    
+extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        categoryViewModel.getCategories().count
+        let count = categoryViewModel.getCategories().count
+        showContentOrPlaceholder()
+        return count
     }
     
-    func tableView(
-        _ tableView: UITableView,
-        cellForRowAt indexPath: IndexPath
-    ) -> UITableViewCell {
-        
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: CategoryCell.identifier,
-            for: indexPath
-        ) as? CategoryCell else {
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        if indexPath.row == categoryViewModel.getCategories().count - 1 {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: tableView.bounds.width)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CategoryCell.identifier, for: indexPath) as? CategoryCell else {
             return UITableViewCell()
         }
-        
-        let title = categoryViewModel.getCategories()[indexPath.row]
-        let isSelected = categoryViewModel.isCategorySelected(title)
-        
-        cell.configure(with: title, isSelected: isSelected)
+        let categoryName = categoryViewModel.getCategories()[indexPath.row]
+        let isSelected = categoryViewModel.isCategorySelected(categoryName)
+        cell.configure(with: categoryName, isSelected: isSelected)
         return cell
     }
-}
-
-// MARK: - UITableViewDelegate
-
-extension CategoryViewController: UITableViewDelegate {
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        75
+    }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let category = categoryViewModel.getCategories()[indexPath.row]
-        
-        categoryViewModel.selectCategory(category)
-        delegate?.didSelectCategory(category)
-        
+        let categoryName = categoryViewModel.getCategories()[indexPath.row]
+        categoryViewModel.selectCategory(categoryName)
+        delegate?.didSelectCategory(categoryName)
         tableView.reloadData()
-        dismiss(animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.dismiss(animated: true, completion: nil)
+        }
     }
     
-    func tableView(
-        _ tableView: UITableView,
-        contextMenuConfigurationForRowAt indexPath: IndexPath,
-        point: CGPoint
-    ) -> UIContextMenuConfiguration? {
-        
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let category = categoryViewModel.getCategories()[indexPath.row]
         
-        let editAction = UIAction(title: "Редактировать") { [weak self] _ in
-            guard let self else { return }
-
-            let oldTitle = self.categoryViewModel.getCategories()[indexPath.row]
-
-            let vc = NewCategoryViewController()
-            vc.initialTitle = oldTitle
-
-            vc.onSave = { [weak self] newTitle in
-                self?.categoryViewModel.updateCategory(
-                    oldTitle: oldTitle,
-                    newTitle: newTitle
-                )
-            }
-
-            let nav = UINavigationController(rootViewController: vc)
-            nav.modalPresentationStyle = .pageSheet
-            self.present(nav, animated: true)
-        }
+        let editAction = UIAction(title: "Редактировать", handler: { _ in
+        })
         
-        let deleteAction = UIAction(
-            title: "Удалить",
-            attributes: .destructive
-        ) { [weak self] _ in
-            guard let self else { return }
-            
-            let alert = UIAlertController(
-                title: "Эта категория точно не нужна?",
-                message: nil,
-                preferredStyle: .actionSheet
-            )
-            
-            let confirm = UIAlertAction(title: "Удалить", style: .destructive) { _ in
+        let deleteAction = UIAction(title: "Удалить", attributes: .destructive, handler: { _ in
+            self.showDeleteCategoryAlert {
                 self.categoryViewModel.deleteCategory(category)
+                self.updateTableViewHeight()
+                tableView.reloadData()
+                self.showContentOrPlaceholder()
             }
-            
-            let cancel = UIAlertAction(title: "Отменить", style: .cancel)
-            
-            alert.addAction(confirm)
-            alert.addAction(cancel)
-            self.present(alert, animated: true)
+        })
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            return UIMenu(title: "", children: [editAction, deleteAction])
+        }
+    }
+    
+    private func showDeleteCategoryAlert(confirmHandler: @escaping () -> Void) {
+        let alert = UIAlertController(title: "Эта категория точно не нужна?", message: nil, preferredStyle: .actionSheet)
+        
+        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { _ in
+            confirmHandler()
         }
         
-        return UIContextMenuConfiguration(
-            identifier: nil,
-            previewProvider: nil
-        ) { _ in
-            UIMenu(
-                title: "",
-                options: .displayInline,
-                children: [editAction, deleteAction]
-            )
-        }
+        let cancelAction = UIAlertAction(title: "Отменить", style: .cancel, handler: nil)
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true, completion: nil)
     }
 }
 
-// MARK: - NewCategoryDelegate
-
-extension CategoryViewController: NewCategoryDelegate {
+extension  CategoryViewController: NewCategoryDelegate {
     func addNewCategory(newCategory: String) {
+        Logger.debug("Новая категория \(newCategory) добавлена в таблицу категорий")
         categoryViewModel.addCategory(newCategory)
+        updateTableViewHeight()
+        tableView.reloadData()
+        showContentOrPlaceholder()
     }
 }
+

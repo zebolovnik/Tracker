@@ -9,7 +9,7 @@ import UIKit
 import CoreData
 
 @main
-final class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
     
@@ -19,7 +19,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController = UIViewController()
         window?.makeKeyAndVisible()
         
-        AnalyticsService.shared.activate()
+        AnalyticsService.activate()
         return true
     }
     
@@ -29,13 +29,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             if let storeURL = storeURL {
                 do {
                     try FileManager.default.removeItem(at: storeURL)
-                    print("Старый persistent store удален.")
+                    Logger.logPrint("Старый persistent store удален.", category: "Data")
                 } catch {
-                    print("Ошибка удаления старого persistent store: \(error)")
+                    Logger.error("Ошибка удаления старого persistent store: \(error.localizedDescription)")
                 }
             }
         } else {
-            print("Не удалось найти persistent store.")
+            Logger.logPrint("Не удалось найти persistent store.", category: "Data")
         }
     }
     
@@ -55,6 +55,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let container = NSPersistentContainer(name: "DataModel")
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
+                Logger.error("Unresolved error \(error), \(error.userInfo)")
                 assertionFailure("Unresolved error \(error), \(error.userInfo)")
             }
         })
@@ -71,7 +72,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             } catch {
                 context.rollback()
                 let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
+                Logger.error("Unresolved error \(nserror), \(nserror.userInfo)")
+                context.rollback()
+                assertionFailure("Unresolved error \(nserror), \(nserror.userInfo)")
             }
         }
     }

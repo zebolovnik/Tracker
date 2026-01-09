@@ -110,7 +110,7 @@ final class ScheduleViewController: UIViewController {
             }
         }
         
-        print("Selected schedule: \(schedule.map { $0?.rawValue ?? "None" })")
+        Logger.debug("Selected schedule: \(schedule.map { $0?.rawValue ?? "None" })")
     }
     
     @objc

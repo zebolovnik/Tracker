@@ -63,9 +63,7 @@ final class PageViewController: UIViewController {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -116,7 +114,7 @@ final class PageViewController: UIViewController {
     }
     
     @objc private func onboardingButtonTapped() {
-        print("🔘 Tapped onboardingButtonTapped - онбординг закрывается и больше не должен быть показан")
+        Logger.logPrint("Onboarding закрывается", category: "Onboarding")
         UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
         didFinishOnboarding?()
     }

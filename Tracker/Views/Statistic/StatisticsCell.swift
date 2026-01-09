@@ -40,9 +40,7 @@ final class StatisticsCell: UITableViewCell {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     private func setupUI() {
         selectionStyle = .none

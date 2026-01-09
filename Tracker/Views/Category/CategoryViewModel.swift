@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 typealias Binding<T> = (T) -> Void
 
@@ -33,7 +34,8 @@ final class CategoryViewModel {
         do {
             try categoryStore.addCategory(newCategory)
         } catch {
-            onError?("CategoryViewModel - Ошибка добавления категории: \(error)")
+            Logger.error("CategoryViewModel - Ошибка добавления категории: \(error.localizedDescription)")
+            onError?("CategoryViewModel - Ошибка добавления категории: \(error.localizedDescription)")
         }
     }
     
@@ -55,30 +57,17 @@ final class CategoryViewModel {
             try categoryStore.deleteCategory(categoryToDelete)
             loadCategories()
         } catch {
-            onError?("CategoryViewModel - Ошибка удаления категории: \(error)")
-        }
-    }
-    
-    func updateCategory(oldTitle: String, newTitle: String) {
-        let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
-
-        do {
-            try categoryStore.updateCategory(oldTitle: oldTitle, newTitle: trimmed)
-            loadCategories()
-        } catch {
-            onError?("Ошибка обновления категории")
+            Logger.error("CategoryViewModel - Ошибка удаления категории: \(error.localizedDescription)")
+            onError?("CategoryViewModel - Ошибка удаления категории: \(error.localizedDescription)")
         }
     }
     
     private func loadCategories() {
         do {
             let storedCategories = try categoryStore.fetchAllCategories()
-            categories = storedCategories
-                .map { $0.title }
-                .filter { $0.lowercased() != "закрепленные" }
+            categories = storedCategories.map { $0.title }
         } catch {
-            print("CategoryViewModel - Ошибка загрузки категорий: \(error)")
+            Logger.error("CategoryViewModel - Ошибка загрузки категорий: \(error.localizedDescription)")
         }
     }
 }

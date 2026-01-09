@@ -35,9 +35,7 @@ final class CollectionHeaderView: UICollectionReusableView {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     func configure(with text: String) {
         titleLabel.text = text

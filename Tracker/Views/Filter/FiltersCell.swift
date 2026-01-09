@@ -12,7 +12,7 @@ final class FiltersCell: UITableViewCell {
     
     private let checkmarkImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "checkmark")
+        imageView.image = UIImage(named: "CategoryCheckmark")
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.isHidden = true
@@ -32,9 +32,7 @@ final class FiltersCell: UITableViewCell {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     private func setupUI() {
         contentView.layer.cornerRadius = 16

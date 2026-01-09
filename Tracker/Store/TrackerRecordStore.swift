@@ -14,7 +14,10 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            fatalError("AppDelegate could not be cast to expected type.")
+            Logger.error("TrackerRecordStore: AppDelegate could not be cast to expected type.")
+            let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+            self.init(context: context)
+            return
         }
         let context = appDelegate.persistentContainer.viewContext
         self.init(context: context)
@@ -36,7 +39,6 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         if let record = try fetchRecord(id: id, date: date) {
             self.context.delete(record)
             self.saveContext()
-            StatisticsService.shared.notifyUpdate()
         }
     }
     
@@ -54,7 +56,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         let dateWithoutTime = calendar.startOfDay(for: date)
         
         guard dateWithoutTime <= currentDateWithoutTime else {
-            print("Невозможно добавить или обновить запись на будущую дату")
+            Logger.warning("Невозможно добавить или обновить запись на будущую дату")
             return
         }
         
@@ -66,7 +68,6 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             newRecord.date = dateWithoutTime
         }
         saveContext()
-        StatisticsService.shared.notifyUpdate()
     }
     
     func isRecordExists(id: UUID, date: Date) throws -> Bool {
@@ -74,16 +75,9 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             if let _ = try fetchRecord(id: id, date: date) { return true
             } else { return false }
         } catch {
-            print("Ошибка при получении записи для трекера: \(error)")
+            Logger.error("Ошибка при получении записи для трекера: \(error.localizedDescription)")
             throw error
         }
-    }
-    
-    func getFinishedTrackersCount() -> Int {
-        let fetchRequest: NSFetchRequest<TrackerRecordCoreData> = TrackerRecordCoreData.fetchRequest()
-        guard let records = try? context.fetch(fetchRequest) else { return 0 }
-        let uniqueTrackerIds = Set(records.compactMap { $0.id })
-        return uniqueTrackerIds.count
     }
     
     private func fetchRecord(id: UUID, date: Date) throws -> TrackerRecordCoreData? {
@@ -96,7 +90,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             let result = try context.fetch(fetchRequest)
             return result.first
         } catch {
-            print("Ошибка при получении записи для трекера: \(error)")
+            Logger.error("Ошибка при получении записи для трекера: \(error.localizedDescription)")
             throw error
         }
     }
@@ -122,7 +116,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         do {
             try controller.performFetch()
         } catch {
-            print("Failed to fetch tracker records: \(error)")
+            Logger.error("Failed to fetch tracker records: \(error.localizedDescription)")
         }
     }
     
@@ -131,7 +125,20 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
             try context.save()
         } catch {
             context.rollback()
-            print("Failed to save context: \(error)")
+            Logger.error("Failed to save context: \(error.localizedDescription)")
         }
     }
+    
+    func getFinishedTrackersCount() -> Int {
+        let request: NSFetchRequest<TrackerRecordCoreData> = TrackerRecordCoreData.fetchRequest()
+        do {
+            let count = try context.count(for: request)
+            Logger.debug("📊 Завершенных трекеров: \(count)")
+            return count
+        } catch {
+            Logger.error("❌ Ошибка при подсчете завершенных трекеров: \(error.localizedDescription)")
+            return 0
+        }
+    }
+    
 }

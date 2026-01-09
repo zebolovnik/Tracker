@@ -28,6 +28,7 @@ final class OnboardingViewController: UIPageViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.overrideUserInterfaceStyle = .light
         dataSource = self
         delegate = self
         setViewControllers([pages[0]], direction: .forward, animated: true)
@@ -70,6 +71,6 @@ extension OnboardingViewController: UIPageViewControllerDelegate {
             return
         }
         currentPageIndex = newIndex
-        print("Текущая страница: \(currentPageIndex)")
+        Logger.debug("Текущая страница онбординга: \(currentPageIndex)")
     }
 }

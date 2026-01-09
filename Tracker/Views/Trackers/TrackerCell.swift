@@ -48,6 +48,7 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypWhite
+        label.overrideUserInterfaceStyle = .light
         label.textAlignment = .left
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -57,6 +58,7 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var emojiView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypWhite.withAlphaComponent(0.3)
+        view.overrideUserInterfaceStyle = .light
         view.clipsToBounds = true
         view.layer.cornerRadius = 24 / 2
         view.layer.masksToBounds = true
@@ -97,6 +99,7 @@ final class TrackerCell: UICollectionViewCell {
         button.alpha = 1
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
         return button
     }()
     
@@ -104,13 +107,10 @@ final class TrackerCell: UICollectionViewCell {
         super.init(frame: frame)
         addSubview()
         addConstraints()
-        actionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
         self.trackerId = tracker.id
@@ -124,7 +124,7 @@ final class TrackerCell: UICollectionViewCell {
         self.titleLabel.text = tracker.name
         
         let wordDay = TrackerCell.dayWord(for: completedDay)
-        dayNumberView.text = wordDay
+        dayNumberView.text = "\(completedDay) \(wordDay)"
         
         if isCompletedToday {
             actionButton.tintColor = .ypWhite
@@ -150,7 +150,21 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     static func dayWord(for number: Int) -> String {
-        return String.localizedStringWithFormat(NSLocalizedString("days_count", comment: ""), number)
+        let lastDigit = number % 10
+        let lastTwoDigits = number % 100
+        
+        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
+            return "manyDays".localized
+        }
+        
+        switch lastDigit {
+        case 1:
+            return "oneDay".localized
+        case 2, 3, 4:
+            return "fewDays".localized
+        default:
+            return "manyDays".localized
+        }
     }
     
     func updatePinVisibility(shouldShowPin: Bool) {
@@ -209,13 +223,13 @@ final class TrackerCell: UICollectionViewCell {
     
     @objc private func buttonTapped() {
         guard let trackerId = trackerId, let indexPath = indexPath else {
-            Logger.error("Нет ID трекера")
+            Logger.error("TrackerCell: Нет ID трекера")
             return }
         if isCompletedToday {
             delegate?.uncompleteTracker(id: trackerId, at: indexPath)
         } else {
             delegate?.completeTracker(id: trackerId, at: indexPath)
         }
-        AnalyticsService.shared.reportClick(screen: .main, item: .track)
+        AnalyticsService.tapTrack()
     }
 }
