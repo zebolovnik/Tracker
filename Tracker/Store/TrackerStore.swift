@@ -8,7 +8,7 @@
 import UIKit
 import CoreData
 
-final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
+class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     private let context: NSManagedObjectContext
     private var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
     private var pinnedTrackers: Set<UUID> = []

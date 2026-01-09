@@ -23,9 +23,23 @@ final class TrackersViewController: UIViewController {
     private var countDays: Int = 0
     private var currentDate: Date = Date()
     
-    private let trackerStore = TrackerStore()
-    private let trackerCategoryStore = TrackerCategoryStore()
-    private let trackerRecordStore = TrackerRecordStore()
+    var trackerStore: TrackerStore?
+    var trackerCategoryStore: TrackerCategoryStore?
+    var trackerRecordStore: TrackerRecordStore?
+    
+    private lazy var internalTrackerStore: TrackerStore = {
+        return self.trackerStore ?? TrackerStore()
+    }()
+
+    private lazy var internalTrackerCategoryStore: TrackerCategoryStore = {
+        let store = self.trackerCategoryStore ?? TrackerCategoryStore()
+        store.delegate = self
+        return store
+    }()
+
+    private lazy var internalTrackerRecordStore: TrackerRecordStore = {
+        return self.trackerRecordStore ?? TrackerRecordStore()
+    }()
     
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     private var isLoading = false
@@ -195,9 +209,6 @@ final class TrackersViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
         
-        trackerCategoryStore.delegate = self
-        //      trackerCategoryStore.setupFetchedResultsController()
-        //      categories = MockData.mockData
         if let savedFilter = appSettingsStore.selectedFilter {
             currentFilter = savedFilter
         } else {
@@ -310,7 +321,7 @@ final class TrackersViewController: UIViewController {
         loadCategories()
         var newVisibleCategories: [TrackerCategory] = []
         
-        let pinnedTrackersList = trackerStore.fetchPinnedTrackers()
+        let pinnedTrackersList = internalTrackerStore.fetchPinnedTrackers()
         if !pinnedTrackersList.isEmpty {
             newVisibleCategories.append(TrackerCategory(title: "Закрепленные", trackers: pinnedTrackersList))
         }
@@ -326,7 +337,7 @@ final class TrackersViewController: UIViewController {
                         }
                     }
                     if let showCompleted = showOnlyCompleted {
-                        return (try? trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)) == showCompleted
+                        return (try? internalTrackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)) == showCompleted
                     }
                     return true
                 }
@@ -406,13 +417,14 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         
         let isCompletedToday = isTrackerCompletedToday(id: tracker.id)
         cell.delegate = self
-        let isPinned = trackerStore.isTrackerPinned(id: tracker.id)
+        let isPinned = internalTrackerStore.isTrackerPinned(id: tracker.id)
         let currentDate = datePicker.date
-        let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
+        let completedDay = (try? internalTrackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         cell.configure(with: tracker.name, date: currentDate, isPinned: isPinned)
         cell.setupCell(with: tracker, indexPath: indexPath, completedDay: completedDay, isCompletedToday: isCompletedToday)
         return cell
     }
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let offsetY = scrollView.contentOffset.y
         let contentHeight = scrollView.contentSize.height
@@ -453,7 +465,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     private func isTrackerCompletedToday(id: UUID) -> Bool {
         do {
-            let completedDates = try trackerRecordStore.completedDays(for: id)
+            let completedDates = try internalTrackerRecordStore.completedDays(for: id)
             return completedDates.contains { Calendar.current.isDate($0, inSameDayAs: datePicker.date) }
         } catch {
             Logger.error("Ошибка при получении выполненных дней трекера: \(error.localizedDescription)")
@@ -461,18 +473,9 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         }
     }
     
-    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-        do {
-            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date)
-        } catch {
-            Logger.error("Ошибка при проверке записи трекера: \(error.localizedDescription)")
-            return false
-        }
-    }
-    
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        let isPinned = trackerStore.isTrackerPinned(id: tracker.id)
+        let isPinned = internalTrackerStore.isTrackerPinned(id: tracker.id)
         
         let pinAction = UIAction(title: isPinned ? "Открепить" : "Закрепить", handler: { _ in
             if isPinned {
@@ -513,7 +516,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     private func pinTracker(id: UUID, at indexPath: IndexPath) {
         do {
-            try trackerStore.pinTracker(id: id)
+            try internalTrackerStore.pinTracker(id: id)
             updateVisibleCategories()
             collectionView.reloadItems(at: [indexPath])
         } catch {
@@ -523,7 +526,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     private func unpinTracker(id: UUID, at indexPath: IndexPath) {
         do {
-            try trackerStore.unpinTracker(id: id)
+            try internalTrackerStore.unpinTracker(id: id)
             updateVisibleCategories()
             collectionView.reloadItems(at: [indexPath])
         } catch {
@@ -531,13 +534,12 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         }
     }
     
-    
     private func editTracker(id: UUID, at indexPath: IndexPath) {
         guard let category = categories.first(where: { $0.trackers.contains(where: { $0.id == id }) }),
               let tracker = category.trackers.first(where: { $0.id == id }) else {
             return
         }
-        let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
+        let completedDay = (try? internalTrackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         let wordDay = TrackerCell.dayWord(for: completedDay)
         let completedDayText = "\(completedDay) \(wordDay)"
         
@@ -558,11 +560,11 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { _ in
             if self.trackers.first(where: { $0.id == id }) != nil {
                 do {
-                    try self.trackerStore.deleteTracker(id: id)
+                    try self.internalTrackerStore.deleteTracker(id: id)
                     self.trackers.removeAll { $0.id == id }
                     self.updateVisibleCategories()
                 } catch {
-                    print("Ошибка при удалении трекера: \(error)")
+                    Logger.error("Ошибка при удалении трекера: \(error.localizedDescription)")
                 }
             } else {
                 Logger.error("Трекер с id \(id) не найден в массиве")
@@ -621,7 +623,7 @@ extension TrackersViewController: TrackerCellDelegate {
             return
         }
         do {
-            try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
+            try internalTrackerRecordStore.updateRecord(id: id, date: datePicker.date)
         } catch {
             Logger.error("Ошибка при обновлении записи в CoreData: \(error.localizedDescription)")
         }
@@ -630,7 +632,7 @@ extension TrackersViewController: TrackerCellDelegate {
     
     func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
         do {
-            try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
+            try internalTrackerRecordStore.deleteRecord(id: id, date: datePicker.date)
         } catch {
             Logger.error("Ошибка при удалении записи из CoreData: \(error.localizedDescription)")
         }
@@ -646,10 +648,10 @@ extension TrackersViewController: TrackerCellDelegate {
 
 extension TrackersViewController: TrackerCategoryStoreDelegate {
     private func loadCategories() {
-        if trackerCategoryStore.trackersCategory.isEmpty {
+        if internalTrackerCategoryStore.trackersCategory.isEmpty {
             Logger.warning("Категории пусты")
         }
-        categories = trackerCategoryStore.trackersCategory
+        categories = internalTrackerCategoryStore.trackersCategory
         trackers = categories.flatMap { $0.trackers }
         collectionView.reloadData()
     }
@@ -664,7 +666,7 @@ extension TrackersViewController: TrackerCategoryStoreDelegate {
 extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
     func addTracker(_ tracker: Tracker, to category: TrackerCategory) {
         do {
-            try trackerStore.addTracker(tracker, with: category)
+            try internalTrackerStore.addTracker(tracker, with: category)
             Logger.debug("Трекер \(tracker.name) добавлен в категорию: \(category.title)")
             datePickerChanged()
         } catch {

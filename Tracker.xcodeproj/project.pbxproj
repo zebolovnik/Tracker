@@ -133,7 +133,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2E3332AD2EF9048D00E784E9 /* Build configuration list for PBXNativeTarget "TrackerTests" */;
 			buildPhases = (
-				A656BB783BD2B412F78B8460 /* [CP] Check Pods Manifest.lock */,
 				2E3332912EF9048D00E784E9 /* Sources */,
 				2E3332922EF9048D00E784E9 /* Frameworks */,
 				2E3332932EF9048D00E784E9 /* Resources */,
@@ -155,7 +154,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2E3332B02EF9048D00E784E9 /* Build configuration list for PBXNativeTarget "TrackerUITests" */;
 			buildPhases = (
-				C08E29665EEFC1B13B3AEDBB /* [CP] Check Pods Manifest.lock */,
 				2E33329B2EF9048D00E784E9 /* Sources */,
 				2E33329C2EF9048D00E784E9 /* Frameworks */,
 				2E33329D2EF9048D00E784E9 /* Resources */,
@@ -242,53 +240,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		A656BB783BD2B412F78B8460 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TrackerTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C08E29665EEFC1B13B3AEDBB /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TrackerUITests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2E3332782EF9048B00E784E9 /* Sources */ = {
@@ -531,8 +482,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = BM3UM9K52D;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = ru.practicum.zebolovnik.TrackerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -553,8 +505,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = BM3UM9K52D;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = ru.practicum.zebolovnik.TrackerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;

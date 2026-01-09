@@ -12,7 +12,7 @@ protocol TrackerCategoryStoreDelegate: AnyObject {
     func didUpdateCategories(inserted: Set<IndexPath>, deleted: Set<IndexPath>, updated: Set<IndexPath>)
 }
 
-final class TrackerCategoryStore: NSObject {
+class TrackerCategoryStore: NSObject {
     var trackersCategory: [TrackerCategory] {
         guard
             let data = self.fetchedResultsController?.fetchedObjects,
