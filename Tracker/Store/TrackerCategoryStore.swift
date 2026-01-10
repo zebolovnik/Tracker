@@ -12,7 +12,7 @@ protocol TrackerCategoryStoreDelegate: AnyObject {
     func didUpdateCategories(inserted: Set<IndexPath>, deleted: Set<IndexPath>, updated: Set<IndexPath>)
 }
 
-final class TrackerCategoryStore: NSObject {
+class TrackerCategoryStore: NSObject {
     var trackersCategory: [TrackerCategory] {
         guard
             let data = self.fetchedResultsController?.fetchedObjects,
@@ -32,7 +32,10 @@ final class TrackerCategoryStore: NSObject {
     
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            fatalError("AppDelegate could not be cast to expected type.")
+            Logger.error("TrackerCategoryStore: AppDelegate could not be cast to expected type.")
+            let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+            self.init(context: context)
+            return
         }
         let context = appDelegate.persistentContainer.viewContext
         self.init(context: context)
@@ -56,7 +59,7 @@ final class TrackerCategoryStore: NSObject {
             do {
                 return try getCategories(from: trackerCategoryCoreData)
             } catch {
-                print("Ошибка при создании Tracker в TrackerStore: \(error)")
+                Logger.error("Ошибка при создании Tracker в TrackerStore: \(error.localizedDescription)")
                 return nil
             }
         }
@@ -93,29 +96,28 @@ final class TrackerCategoryStore: NSObject {
                 let tracker = try createTracker(from: trackerCoreData)
                 trackers.append(tracker)
             } catch {
-                print("Не удалось создать трекер для категории \(title): \(error)")
+                Logger.error("TrackerCategoryStore Не удалось создать трекер для категории \(title): \(error.localizedDescription)")
             }
         }
         return TrackerCategory(title: title, trackers: trackers)
     }
     
     private func mapToCoreData(_ tracker: Tracker) -> TrackerCoreData {
-        guard let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) else {
-            fatalError("Не удалось найти строковое представление для цвета \(tracker.color)")
-        }
-        
         let trackerEntity = TrackerCoreData(context: context)
         trackerEntity.id = tracker.id
         trackerEntity.name = tracker.name
-        trackerEntity.color = colorString
         trackerEntity.emoji = tracker.emoji
-        if let transformedSchedule = DaysValueTransformer().transformedValue(tracker.schedule) as? NSObject {
-            trackerEntity.schedule = transformedSchedule
-            print("mapToCoreData - Успешно сохраненное schedule: \(transformedSchedule)")
+        
+        if let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) {
+            trackerEntity.color = colorString
         } else {
-            print("mapToCoreData - Ошибка преобразования расписания! Schedule не сохранен")
-            trackerEntity.schedule = nil
+            Logger.error("TrackerCategoryStore: Не удалось найти строковое представление для цвета \(tracker.color)")
+            assertionFailure("TrackerCategoryStore: Не удалось найти строковое представление для цвета \(tracker.color)")
+            trackerEntity.color = "Color selection 1"
         }
+        
+        Logger.debug("TrackerCategoryStore - Исходное schedule перед трансформацией: \(tracker.schedule)")
+        trackerEntity.schedule = tracker.schedule as NSObject
         return trackerEntity
     }
     
@@ -133,13 +135,12 @@ final class TrackerCategoryStore: NSObject {
         }
         
         let emoji = trackerCoreData.emoji ?? ""
-        
-        let schedule: [WeekDay]
-        if let scheduleData = trackerCoreData.schedule,
-           let transformedSchedule = DaysValueTransformer().reverseTransformedValue(scheduleData) as? [WeekDay] {
-            schedule = transformedSchedule
-        } else {
-            schedule = []
+        var schedule: [WeekDay] = []
+        if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
+            schedule = scheduleData.compactMap { $0 }
+        }
+        if schedule.isEmpty {
+            Logger.warning("ТrackerCoreData: расписание оказалось пустым после фильтрации.")
         }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
@@ -159,7 +160,7 @@ final class TrackerCategoryStore: NSObject {
         do {
             try controller.performFetch()
         } catch {
-            print("Failed to fetch categories: \(error)")
+            Logger.error("Failed to fetch categories: \(error.localizedDescription)")
         }
     }
     
@@ -168,7 +169,7 @@ final class TrackerCategoryStore: NSObject {
             try context.save()
         } catch {
             context.rollback()
-            print("Failed to save context: \(error)")
+            Logger.error("Failed to save context: \(error.localizedDescription)")
         }
     }
 }

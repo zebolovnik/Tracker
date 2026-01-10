@@ -39,9 +39,7 @@ final class ColorCell: UICollectionViewCell {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     func configure(with color: UIColor, isSelected: Bool) {
         colorView.backgroundColor = color

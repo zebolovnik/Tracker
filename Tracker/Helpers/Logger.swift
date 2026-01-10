@@ -17,10 +17,10 @@ final class Logger {
     static let general = OSLog(subsystem: subsystem, category: "General")
     
     static func debug(_ message: String, log: OSLog = .default) {
-        #if DEBUG
+#if DEBUG
         print("🔍 [DEBUG] \(message)")
         os_log("%{public}@", log: log, type: .debug, message)
-        #endif
+#endif
     }
     
     static func info(_ message: String, log: OSLog = .default) {
@@ -40,7 +40,7 @@ final class Logger {
     
     // Для совместимости со старым кодом
     static func logPrint(_ message: String, category: String = "General") {
-        #if DEBUG
+#if DEBUG
         let icon: String
         switch category {
         case "UI": icon = "🖥️"
@@ -50,6 +50,6 @@ final class Logger {
         default: icon = "📝"
         }
         print("\(icon) [\(category)] \(message)")
-        #endif
+#endif
     }
 }

@@ -1,0 +1,24 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by Nikolay Zebolov on 07.01.2026.
+ 
+*/
+
+"trackers.title" = "Трекеры";
+"buttonFilters.title" = "Фильтры";
+
+"tabbar.trackers" = "Трекеры";
+"tabbar.statistics" = "Статистика";
+
+"oneDay" = "день";
+"fewDays" = "дня";
+"manyDays" = "дней";
+
+"days_count" = "%d дней";
+
+"statistics.title" = "Статистика";
+"statistics.completed" = "Трекеров завершено";
+"statistics.empty" = "Анализировать пока нечего";
+"trackers.empty.title" = "Что будем отслеживать?";

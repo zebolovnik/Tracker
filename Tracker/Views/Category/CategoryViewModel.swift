@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 typealias Binding<T> = (T) -> Void
 
@@ -33,7 +34,8 @@ final class CategoryViewModel {
         do {
             try categoryStore.addCategory(newCategory)
         } catch {
-            onError?("CategoryViewModel - Ошибка добавления категории: \(error)")
+            Logger.error("CategoryViewModel - Ошибка добавления категории: \(error.localizedDescription)")
+            onError?("CategoryViewModel - Ошибка добавления категории: \(error.localizedDescription)")
         }
     }
     
@@ -49,12 +51,23 @@ final class CategoryViewModel {
         selectedCategory = category
     }
     
+    func deleteCategory(_ category: String) {
+        do {
+            let categoryToDelete = TrackerCategory(title: category, trackers: [])
+            try categoryStore.deleteCategory(categoryToDelete)
+            loadCategories()
+        } catch {
+            Logger.error("CategoryViewModel - Ошибка удаления категории: \(error.localizedDescription)")
+            onError?("CategoryViewModel - Ошибка удаления категории: \(error.localizedDescription)")
+        }
+    }
+    
     private func loadCategories() {
         do {
             let storedCategories = try categoryStore.fetchAllCategories()
             categories = storedCategories.map { $0.title }
         } catch {
-            print("CategoryViewModel - Ошибка загрузки категорий: \(error)")
+            Logger.error("CategoryViewModel - Ошибка загрузки категорий: \(error.localizedDescription)")
         }
     }
 }

@@ -25,14 +25,12 @@ final class CategoryCell: UITableViewCell {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     private func setupUI() {
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = true
-        backgroundColor = .ypLightGray.withAlphaComponent(0.3)
+        backgroundColor = .ypBackground
         textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         textLabel?.textColor = .ypBlack
         detailTextLabel?.font = UIFont.systemFont(ofSize: 17)

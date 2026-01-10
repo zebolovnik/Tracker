@@ -38,9 +38,7 @@ final class EmojiCell: UICollectionViewCell {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
     
     func configure(with emoji: String, isSelected: Bool) {
         emojiLabel.text = emoji

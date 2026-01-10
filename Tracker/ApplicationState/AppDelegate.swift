@@ -9,7 +9,7 @@ import UIKit
 import CoreData
 
 @main
-final class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
     
@@ -18,6 +18,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window = UIWindow()
         window?.rootViewController = UIViewController()
         window?.makeKeyAndVisible()
+        
+        AnalyticsService.activate()
         return true
     }
     
@@ -29,11 +31,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
                     try FileManager.default.removeItem(at: storeURL)
                     Logger.logPrint("Старый persistent store удален.", category: "Data")
                 } catch {
-                    Logger.logPrint("Ошибка удаления старого persistent store: \(error)", category: "Error")
+                    Logger.error("Ошибка удаления старого persistent store: \(error.localizedDescription)")
                 }
             }
         } else {
-            Logger.logPrint("Не удалось найти persistent store.", category: "Error")
+            Logger.logPrint("Не удалось найти persistent store.", category: "Data")
         }
     }
     
@@ -49,31 +51,35 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - Core Data stack
     
     lazy var persistentContainer: NSPersistentContainer = {
+        
         let container = NSPersistentContainer(name: "DataModel")
-        container.loadPersistentStores { _, error in
+        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                Logger.error("Unresolved error \(error), \(error.userInfo)")
+                assertionFailure("Unresolved error \(error), \(error.userInfo)")
             }
-        }
+        })
         return container
     }()
     
     // MARK: - Core Data Saving support
     
-    func saveContext() {
+    func saveContext () {
         let context = persistentContainer.viewContext
-        guard context.hasChanges else { return }
-        
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-            let nserror = error as NSError
-            fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                context.rollback()
+                let nserror = error as NSError
+                Logger.error("Unresolved error \(nserror), \(nserror.userInfo)")
+                context.rollback()
+                assertionFailure("Unresolved error \(nserror), \(nserror.userInfo)")
+            }
         }
     }
     
     func applicationWillTerminate(_ application: UIApplication) {
-        saveContext()
+        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
     }
 }
